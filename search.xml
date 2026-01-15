@@ -4,13 +4,29 @@
   
     
     <entry>
-      <title>My First Blog</title>
+      <title>我的第一篇博客</title>
       <link href="/2026/01/15/My-First-Blog/"/>
       <url>/2026/01/15/My-First-Blog/</url>
       
         <content type="html"><![CDATA[<p>Hello,World!</p>]]></content>
       
       
+      <categories>
+          
+          <category> 技术日记 </category>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Java </tag>
+            
+            <tag> 学习笔记 </tag>
+            
+        </tags>
       
     </entry>
     
