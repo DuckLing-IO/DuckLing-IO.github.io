@@ -1,0 +1,416 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>[MySQL]索引 | DuckLing's Blog</title><meta name="author" content="DuckLing-IO"><meta name="copyright" content="DuckLing-IO"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#0d0d0d"><meta name="description" content="MySQL 索引核心知识体系总结1. 索引概述 定义：索引（Index）是帮助 MySQL 高效获取数据的数据结构（有序）。 本质：空间换时间。 优缺点： 优点： 大大减少服务器扫描的数据量（降低 I&#x2F;O 成本）。 帮助服务器避免排序和临时表（降低 CPU 成本）。   缺点： 占用磁盘空间。 降低写操作（INSERT, UPDATE, DELETE）的速度，因为需要维护索引结构。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[MySQL]索引">
+<meta property="og:url" content="http://example.com/2026/01/15/MySQL-%E7%B4%A2%E5%BC%95/index.html">
+<meta property="og:site_name" content="DuckLing&#39;s Blog">
+<meta property="og:description" content="MySQL 索引核心知识体系总结1. 索引概述 定义：索引（Index）是帮助 MySQL 高效获取数据的数据结构（有序）。 本质：空间换时间。 优缺点： 优点： 大大减少服务器扫描的数据量（降低 I&#x2F;O 成本）。 帮助服务器避免排序和临时表（降低 CPU 成本）。   缺点： 占用磁盘空间。 降低写操作（INSERT, UPDATE, DELETE）的速度，因为需要维护索引结构。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/MySQL-Logo.png">
+<meta property="article:published_time" content="2026-01-15T15:00:00.000Z">
+<meta property="article:modified_time" content="2026-01-15T15:19:20.660Z">
+<meta property="article:author" content="DuckLing-IO">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="学习笔记">
+<meta property="article:tag" content="数据库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/MySQL-Logo.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "[MySQL]索引",
+  "url": "http://example.com/2026/01/15/MySQL-%E7%B4%A2%E5%BC%95/",
+  "image": "http://example.com/img/MySQL-Logo.png",
+  "datePublished": "2026-01-15T15:00:00.000Z",
+  "dateModified": "2026-01-15T15:19:20.660Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "DuckLing-IO",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/"><link rel="canonical" href="http://example.com/2026/01/15/MySQL-%E7%B4%A2%E5%BC%95/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.3"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '[MySQL]索引',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/home.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">DuckLing's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">[MySQL]索引</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">[MySQL]索引</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-01-15T15:00:00.000Z" title="发表于 2026-01-15 23:00:00">2026-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-01-15T15:19:20.660Z" title="更新于 2026-01-15 23:19:20">2026-01-15</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/MySQL/">MySQL</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="MySQL-索引核心知识体系总结"><a href="#MySQL-索引核心知识体系总结" class="headerlink" title="MySQL 索引核心知识体系总结"></a>MySQL 索引核心知识体系总结</h1><h2 id="1-索引概述"><a href="#1-索引概述" class="headerlink" title="1. 索引概述"></a>1. 索引概述</h2><ul>
+<li><strong>定义</strong>：索引（Index）是帮助 MySQL <strong>高效获取数据</strong>的数据结构（有序）。</li>
+<li><strong>本质</strong>：空间换时间。</li>
+<li><strong>优缺点</strong>：<ul>
+<li><strong>优点</strong>：<ol>
+<li>大大减少服务器扫描的数据量（降低 I&#x2F;O 成本）。</li>
+<li>帮助服务器避免排序和临时表（降低 CPU 成本）。</li>
+</ol>
+</li>
+<li><strong>缺点</strong>：<ol>
+<li>占用磁盘空间。</li>
+<li>降低写操作（<code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>）的速度，因为需要维护索引结构。</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="2-索引结构-InnoDB"><a href="#2-索引结构-InnoDB" class="headerlink" title="2. 索引结构 (InnoDB)"></a>2. 索引结构 (InnoDB)</h2><p>MySQL 默认存储引擎 InnoDB 使用 <strong>B+ Tree</strong> 结构。</p>
+<ul>
+<li><strong>B+ Tree 特点</strong>：<ol>
+<li><strong>非叶子节点</strong>仅存储键值（Key）和指针，不存储数据，增加了节点的度（Fan-out），树的高度通常控制在 3-4 层，减少 I&#x2F;O 次数。</li>
+<li><strong>叶子节点</strong>存储所有数据（Key + Row Data 或 Key + PK），且叶子节点之间通过<strong>双向链表</strong>连接。</li>
+<li><strong>扫库方便</strong>：支持范围查询，全表扫描只需遍历叶子节点链表。</li>
+</ol>
+</li>
+<li><strong>为什么不用其他结构？</strong><ul>
+<li><strong>Hash</strong>：仅支持精确匹配（<code>=</code>），不支持范围查询（<code>&gt;</code>, <code>&lt;</code>），不支持排序。</li>
+<li><strong>二叉树&#x2F;红黑树</strong>：大数据量下树太高，磁盘 I&#x2F;O 次数过多；可能会退化成链表（二叉树）。</li>
+<li><strong>B-Tree</strong>：非叶子节点也存数据，导致单页存储的 Key 变少，树的高度变高，I&#x2F;O 增加。</li>
+</ul>
+</li>
+</ul>
+<h2 id="3-索引分类"><a href="#3-索引分类" class="headerlink" title="3. 索引分类"></a>3. 索引分类</h2><h3 id="3-1-按物理存储分类-InnoDB-核心"><a href="#3-1-按物理存储分类-InnoDB-核心" class="headerlink" title="3.1 按物理存储分类 (InnoDB 核心)"></a>3.1 按物理存储分类 (InnoDB 核心)</h3><table>
+<thead>
+<tr>
+<th><strong>分类</strong></th>
+<th><strong>聚集索引 (Clustered Index)</strong></th>
+<th><strong>二级索引 (Secondary Index)</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>存储内容</strong></td>
+<td>叶子节点存储<strong>完整行数据</strong></td>
+<td>叶子节点存储<strong>索引列值 + 主键值</strong></td>
+</tr>
+<tr>
+<td><strong>数量</strong></td>
+<td>有且仅有一个</td>
+<td>可以有多个</td>
+</tr>
+<tr>
+<td><strong>选取规则</strong></td>
+<td>1. 主键 (Primary Key) 2. 第一个唯一非空索引 (Unique Not Null) 3. 自动生成隐藏列 ROW_ID</td>
+<td>除了聚集索引外的所有索引</td>
+</tr>
+<tr>
+<td><strong>回表查询</strong></td>
+<td>不需要</td>
+<td>需要（先查二级索引拿到主键，再回聚集索引查数据），除非<strong>覆盖索引</strong></td>
+</tr>
+</tbody></table>
+<h3 id="3-2-按逻辑-功能分类"><a href="#3-2-按逻辑-功能分类" class="headerlink" title="3.2 按逻辑&#x2F;功能分类"></a>3.2 按逻辑&#x2F;功能分类</h3><ul>
+<li><strong>主键索引 (Primary)</strong>：唯一且非空。</li>
+<li><strong>唯一索引 (Unique)</strong>：索引列值必须唯一，允许 NULL。</li>
+<li><strong>普通索引 (Normal)</strong>：无特殊限制。</li>
+<li><strong>全文索引 (Fulltext)</strong>：用于大文本搜索（通常用 ES 替代）。</li>
+</ul>
+<h3 id="3-3-按字段个数分类"><a href="#3-3-按字段个数分类" class="headerlink" title="3.3 按字段个数分类"></a>3.3 按字段个数分类</h3><ul>
+<li><strong>单列索引</strong>：一个索引包含一个列。</li>
+<li><strong>联合索引</strong>：一个索引包含多个列（涉及最左前缀原则）。</li>
+</ul>
+<h2 id="4-索引相关语法"><a href="#4-索引相关语法" class="headerlink" title="4. 索引相关语法"></a>4. 索引相关语法</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">-- 创建索引</span><br><span class="line">CREATE [UNIQUE|FULLTEXT] INDEX index_name ON table_name (col_name [ASC|DESC], ...);</span><br><span class="line"></span><br><span class="line">-- 查看索引</span><br><span class="line">SHOW INDEX FROM table_name;</span><br><span class="line"></span><br><span class="line">-- 删除索引</span><br><span class="line">DROP INDEX index_name ON table_name;</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-SQL-性能分析工具"><a href="#5-SQL-性能分析工具" class="headerlink" title="5. SQL 性能分析工具"></a>5. SQL 性能分析工具</h2><h3 id="5-1-SQL-执行频率"><a href="#5-1-SQL-执行频率" class="headerlink" title="5.1 SQL 执行频率"></a>5.1 SQL 执行频率</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SHOW GLOBAL STATUS LIKE &#x27;Com_______&#x27;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>查看 <code>Com_select</code>, <code>Com_insert</code>, <code>Com_update</code>, <code>Com_delete</code> 的数值，判断系统是读多写少还是写多读少，决定优化方向。</li>
+</ul>
+<h3 id="5-2-慢查询日志-Slow-Query-Log"><a href="#5-2-慢查询日志-Slow-Query-Log" class="headerlink" title="5.2 慢查询日志 (Slow Query Log)"></a>5.2 慢查询日志 (Slow Query Log)</h3><ul>
+<li><strong>作用</strong>：记录执行时间超过 <code>long_query_time</code>（默认 10s）的 SQL。</li>
+<li><strong>配置</strong>：<code>/etc/my.cnf</code> 中设置 <code>slow_query_log=1</code> 和 <code>long_query_time=2</code> (示例)。</li>
+<li><strong>分析</strong>：定位出拖慢系统的具体 SQL 语句。</li>
+</ul>
+<h3 id="5-3-Profile-详情"><a href="#5-3-Profile-详情" class="headerlink" title="5.3 Profile 详情"></a>5.3 Profile 详情</h3><ul>
+<li><strong>作用</strong>：查看 SQL 执行在每一个阶段（CPU、IO、Context Switch）的耗时。</li>
+<li><strong>命令</strong>：<ul>
+<li><code>SET profiling = 1;</code> (开启)</li>
+<li><code>SHOW PROFILES;</code> (查看最近 SQL 列表)</li>
+<li><code>SHOW PROFILE FOR QUERY query_id;</code> (查看具体资源消耗)</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-4-EXPLAIN-执行计划-核心"><a href="#5-4-EXPLAIN-执行计划-核心" class="headerlink" title="5.4 EXPLAIN 执行计划 (核心)"></a>5.4 EXPLAIN 执行计划 (核心)</h3><p>使用 <code>EXPLAIN SELECT ...</code> 分析查询。关注核心字段：</p>
+<ol>
+<li><strong>type (访问类型)</strong>：性能由好到差排序：<ul>
+<li><code>NULL</code> (不查表)</li>
+<li><code>system</code> (系统表 1 行)</li>
+<li><code>const</code> (主键&#x2F;唯一索引等值查询)</li>
+<li><code>eq_ref</code> (主键&#x2F;唯一索引关联)</li>
+<li><code>ref</code> (非唯一索引等值查询)</li>
+<li><code>range</code> (索引范围查询)</li>
+<li><code>index</code> (全索引扫描)</li>
+<li><code>all</code> (全表扫描)</li>
+<li><strong>目标</strong>：至少达到 <code>range</code>，最好是 <code>ref</code>。</li>
+</ul>
+</li>
+<li><strong>possible_keys</strong>：可能用到的索引。</li>
+<li><strong>key</strong>：实际用到的索引。</li>
+<li><strong>key_len</strong>：索引使用的字节数（越短越好，用于检查联合索引是否完全生效）。</li>
+<li><strong>Extra</strong>：<ul>
+<li><code>Using index</code>：<strong>好</strong>。使用了覆盖索引，无需回表。</li>
+<li><code>Using where</code>：需要过滤。</li>
+<li><code>Using temporary</code>：<strong>差</strong>。使用了临时表（常见于 group by）。</li>
+<li><code>Using filesort</code>：<strong>差</strong>。需要文件排序（常见于 order by 未命中索引）。</li>
+</ul>
+</li>
+</ol>
+<h2 id="6-索引的使用与失效场景"><a href="#6-索引的使用与失效场景" class="headerlink" title="6. 索引的使用与失效场景"></a>6. 索引的使用与失效场景</h2><h3 id="6-1-最左前缀法则-联合索引"><a href="#6-1-最左前缀法则-联合索引" class="headerlink" title="6.1 最左前缀法则 (联合索引)"></a>6.1 最左前缀法则 (联合索引)</h3><ul>
+<li>查询从索引的<strong>最左列</strong>开始，<strong>不能跳过</strong>索引中的列。</li>
+<li>如果跳过某一列，后面的列索引失效。</li>
+<li><strong>范围查询右侧失效</strong>：如果遇到范围查询 (<code>&gt;</code>, <code>&lt;</code>)，则<strong>该列之后</strong>的列索引失效。（<code>&gt;=</code>、<code>&lt;=</code> 通常不会失效）。</li>
+</ul>
+<h3 id="6-2-常见索引失效情况"><a href="#6-2-常见索引失效情况" class="headerlink" title="6.2 常见索引失效情况"></a>6.2 常见索引失效情况</h3><ol>
+<li><strong>函数运算</strong>：<code>WHERE substring(name, 1, 2) = &#39;ab&#39;</code>（对索引列做运算）。</li>
+<li><strong>字符串不加引号</strong>：<code>WHERE phone = 123</code>（发生隐式类型转换）。</li>
+<li><strong>模糊查询</strong>：<code>LIKE &#39;%abc&#39;</code>（头部模糊匹配失效，<code>&#39;abc%&#39;</code> 走索引）。</li>
+<li><strong>OR 连接</strong>：<code>OR</code> 两侧只要有一侧没有索引，涉及的索引全部失效。</li>
+<li><strong>数据分布影响</strong>：如果 MySQL 评估全表扫描比走索引快（例如表中绝大多数数据都符合条件），则放弃索引。</li>
+</ol>
+<h3 id="6-3-覆盖索引-Covering-Index"><a href="#6-3-覆盖索引-Covering-Index" class="headerlink" title="6.3 覆盖索引 (Covering Index)"></a>6.3 覆盖索引 (Covering Index)</h3><ul>
+<li><strong>定义</strong>：查询的列 (<code>SELECT</code> 后的列) 刚好都在索引中，不需要回表查询。</li>
+<li><strong>建议</strong>：尽量避免 <code>SELECT *</code>，指定必要列，争取命中覆盖索引（Extra: <code>Using index</code>）。</li>
+</ul>
+<h3 id="6-4-前缀索引"><a href="#6-4-前缀索引" class="headerlink" title="6.4 前缀索引"></a>6.4 前缀索引</h3><ul>
+<li>针对 <code>VARCHAR</code>, <code>TEXT</code> 等长字符串，只对前 N 个字符建立索引，以节省空间。</li>
+<li>语法：<code>CREATE INDEX idx_name ON table(column(n));</code></li>
+</ul>
+<h2 id="7-索引的设计原则"><a href="#7-索引的设计原则" class="headerlink" title="7. 索引的设计原则"></a>7. 索引的设计原则</h2><ol>
+<li><p><strong>针对性</strong>：对查询频次高、数据量大（&gt;100万行）的表建立索引。</p>
+</li>
+<li><p><strong>字段选择</strong>：</p>
+<ul>
+<li><code>WHERE</code> 子句中的过滤条件字段。</li>
+<li><code>ORDER BY</code>、<code>GROUP BY</code> 涉及的字段。</li>
+</ul>
+</li>
+<li><p><strong>区分度</strong>：选择区分度高（唯一性高）的列（如 UUID、手机号）。区分度低的列（如性别、状态）不适合建单列索引。</p>
+</li>
+<li><p><strong>联合索引优先</strong>：尽量使用联合索引，利用覆盖索引机制，减少回表。</p>
+</li>
+<li><p><strong>字符串优化</strong>：长字符串使用前缀索引。</p>
+</li>
+<li><p><strong>控制数量</strong>：索引不是越多越好，过多的索引会拖慢写性能并增加优化器负担。</p>
+</li>
+<li><p><strong>非空约束</strong>：尽量将字段设为 <code>NOT NULL</code>，有利于优化器确定索引效率。</p>
+<h2 id="8-SQL-提示-SQL-Hints"><a href="#8-SQL-提示-SQL-Hints" class="headerlink" title="8. SQL 提示 (SQL Hints)"></a>8. SQL 提示 (SQL Hints)</h2><h3 id="8-1-概述"><a href="#8-1-概述" class="headerlink" title="8.1 概述"></a>8.1 概述</h3><ul>
+<li><strong>定义</strong>：开发者在 SQL 语句中显式地添加指令，人为干预数据库优化器（Optimizer）对索引的选择。</li>
+<li><strong>场景</strong>：当 MySQL 优化器生成的执行计划不是最优解（例如选错了索引，或者放弃索引走全表扫描）时使用。</li>
+</ul>
+<h3 id="8-2-常用语法"><a href="#8-2-常用语法" class="headerlink" title="8.2 常用语法"></a>8.2 常用语法</h3><p>SQL 提示需紧跟在表名之后。</p>
+<h4 id="1-USE-INDEX-建议"><a href="#1-USE-INDEX-建议" class="headerlink" title="1. USE INDEX (建议)"></a>1. USE INDEX (建议)</h4><ul>
+<li><p><strong>含义</strong>：<strong>建议</strong> MySQL 使用指定的索引之一。</p>
+</li>
+<li><p><strong>特点</strong>：这只是一个参考，优化器评估后如果觉得全表扫描更快，<strong>依然可能忽略</strong>该提示。</p>
+</li>
+<li><p><strong>语法</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM table_name USE INDEX (idx_name) WHERE col = &#x27;value&#x27;;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="2-IGNORE-INDEX-忽略"><a href="#2-IGNORE-INDEX-忽略" class="headerlink" title="2. IGNORE INDEX (忽略)"></a>2. IGNORE INDEX (忽略)</h4><ul>
+<li><p><strong>含义</strong>：<strong>禁止</strong> MySQL 使用指定的索引。</p>
+</li>
+<li><p><strong>场景</strong>：</p>
+<ul>
+<li>用于验证某个索引是否对查询产生负面影响。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<ul>
+<li><p>当你确定全表扫描比走该索引更快时（例如数据分布极不均匀）。</p>
+</li>
+<li><p><strong>语法</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM table_name IGNORE INDEX (idx_name) WHERE col = &#x27;value&#x27;;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="3-FORCE-INDEX-强制"><a href="#3-FORCE-INDEX-强制" class="headerlink" title="3. FORCE INDEX (强制)"></a>3. FORCE INDEX (强制)</h4><ul>
+<li><p><strong>含义</strong>：<strong>强制</strong> MySQL 使用指定的索引。</p>
+</li>
+<li><p><strong>特点</strong>：比 <code>USE INDEX</code> 语气更重。如果强制的索引无法使用，MySQL 通常会选择全表扫描作为代价，极少会忽略该指令。</p>
+</li>
+<li><p><strong>语法</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM table_name FORCE INDEX (idx_name) WHERE col = &#x27;value&#x27;;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">DuckLing-IO</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2026/01/15/MySQL-%E7%B4%A2%E5%BC%95/">http://example.com/2026/01/15/MySQL-%E7%B4%A2%E5%BC%95/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">DuckLing's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a><a class="post-meta__tags" href="/tags/MySQL/">MySQL</a><a class="post-meta__tags" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a></div><div class="post-share"><div class="social-share" data-image="/img/MySQL-Logo.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/01/15/MySQL-SQL%E4%BC%98%E5%8C%96/" title="[MySQL]优化"><img class="cover" src="/img/MySQL-Logo.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">[MySQL]优化</div></div><div class="info-2"><div class="info-item-1">1. 插入数据优化 (Insert Optimization)核心目标： 减少磁盘I&#x2F;O交互次数，降低日志刷新频率。  批量插入 (Batch Insert): 不要使用多条 INSERT INTO 语句，合并为一条。 12-- 推荐INSERT INTO tb_test VALUES (1,&#x27;a&#x27;), (2,&#x27;b&#x27;), (3,&#x27;c&#x27;);  手动事务控制 (Manual Transaction): 如果插入数据量大（例如几千条），不要让数据库自动提交事务。手动开启事务，执行完后一次提交。 1234START TRANSACTION;INSERT ...;INSERT ...;COMMIT;  主键顺序插入: 数据按照主键顺序插入效率最高，减少由于页分裂 (Page Split) 带来的性能损耗。  大批量导入 (Load Data): 对于百万级以上数据，使用 LOAD DATA INFILE 指令，性能远超 INSERT。 1LOAD DATA LOCAL INFILE &#x27;/path/to/data...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/01/15/MySQL-SQL%E4%BC%98%E5%8C%96/" title="[MySQL]优化"><img class="cover" src="/img/MySQL-Logo.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-01-15</div><div class="info-item-2">[MySQL]优化</div></div><div class="info-2"><div class="info-item-1">1. 插入数据优化 (Insert Optimization)核心目标： 减少磁盘I&#x2F;O交互次数，降低日志刷新频率。  批量插入 (Batch Insert): 不要使用多条 INSERT INTO 语句，合并为一条。 12-- 推荐INSERT INTO tb_test VALUES (1,&#x27;a&#x27;), (2,&#x27;b&#x27;), (3,&#x27;c&#x27;);  手动事务控制 (Manual Transaction): 如果插入数据量大（例如几千条），不要让数据库自动提交事务。手动开启事务，执行完后一次提交。 1234START TRANSACTION;INSERT ...;INSERT ...;COMMIT;  主键顺序插入: 数据按照主键顺序插入效率最高，减少由于页分裂 (Page Split) 带来的性能损耗。  大批量导入 (Load Data): 对于百万级以上数据，使用 LOAD DATA INFILE 指令，性能远超 INSERT。 1LOAD DATA LOCAL INFILE &#x27;/path/to/data...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="twikoo-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">DuckLing-IO</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/DuckLing-IO" target="_blank" title="Github"><i class="fab fa-github" style="color: #191717;"></i></a><a class="social-icon" href="mailto:2275628883@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #000000;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎访问我的博客！<br>如遇问题请与我联系！<br>email : 2275628883@qq.com</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL-%E7%B4%A2%E5%BC%95%E6%A0%B8%E5%BF%83%E7%9F%A5%E8%AF%86%E4%BD%93%E7%B3%BB%E6%80%BB%E7%BB%93"><span class="toc-number">1.</span> <span class="toc-text">MySQL 索引核心知识体系总结</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%B4%A2%E5%BC%95%E6%A6%82%E8%BF%B0"><span class="toc-number">1.1.</span> <span class="toc-text">1. 索引概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%B4%A2%E5%BC%95%E7%BB%93%E6%9E%84-InnoDB"><span class="toc-number">1.2.</span> <span class="toc-text">2. 索引结构 (InnoDB)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%B4%A2%E5%BC%95%E5%88%86%E7%B1%BB"><span class="toc-number">1.3.</span> <span class="toc-text">3. 索引分类</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E6%8C%89%E7%89%A9%E7%90%86%E5%AD%98%E5%82%A8%E5%88%86%E7%B1%BB-InnoDB-%E6%A0%B8%E5%BF%83"><span class="toc-number">1.3.1.</span> <span class="toc-text">3.1 按物理存储分类 (InnoDB 核心)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E6%8C%89%E9%80%BB%E8%BE%91-%E5%8A%9F%E8%83%BD%E5%88%86%E7%B1%BB"><span class="toc-number">1.3.2.</span> <span class="toc-text">3.2 按逻辑&#x2F;功能分类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E6%8C%89%E5%AD%97%E6%AE%B5%E4%B8%AA%E6%95%B0%E5%88%86%E7%B1%BB"><span class="toc-number">1.3.3.</span> <span class="toc-text">3.3 按字段个数分类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E7%B4%A2%E5%BC%95%E7%9B%B8%E5%85%B3%E8%AF%AD%E6%B3%95"><span class="toc-number">1.4.</span> <span class="toc-text">4. 索引相关语法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-SQL-%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7"><span class="toc-number">1.5.</span> <span class="toc-text">5. SQL 性能分析工具</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-SQL-%E6%89%A7%E8%A1%8C%E9%A2%91%E7%8E%87"><span class="toc-number">1.5.1.</span> <span class="toc-text">5.1 SQL 执行频率</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E6%85%A2%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97-Slow-Query-Log"><span class="toc-number">1.5.2.</span> <span class="toc-text">5.2 慢查询日志 (Slow Query Log)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-Profile-%E8%AF%A6%E6%83%85"><span class="toc-number">1.5.3.</span> <span class="toc-text">5.3 Profile 详情</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-EXPLAIN-%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92-%E6%A0%B8%E5%BF%83"><span class="toc-number">1.5.4.</span> <span class="toc-text">5.4 EXPLAIN 执行计划 (核心)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E7%B4%A2%E5%BC%95%E7%9A%84%E4%BD%BF%E7%94%A8%E4%B8%8E%E5%A4%B1%E6%95%88%E5%9C%BA%E6%99%AF"><span class="toc-number">1.6.</span> <span class="toc-text">6. 索引的使用与失效场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E6%9C%80%E5%B7%A6%E5%89%8D%E7%BC%80%E6%B3%95%E5%88%99-%E8%81%94%E5%90%88%E7%B4%A2%E5%BC%95"><span class="toc-number">1.6.1.</span> <span class="toc-text">6.1 最左前缀法则 (联合索引)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E5%B8%B8%E8%A7%81%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88%E6%83%85%E5%86%B5"><span class="toc-number">1.6.2.</span> <span class="toc-text">6.2 常见索引失效情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E8%A6%86%E7%9B%96%E7%B4%A2%E5%BC%95-Covering-Index"><span class="toc-number">1.6.3.</span> <span class="toc-text">6.3 覆盖索引 (Covering Index)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-%E5%89%8D%E7%BC%80%E7%B4%A2%E5%BC%95"><span class="toc-number">1.6.4.</span> <span class="toc-text">6.4 前缀索引</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E7%B4%A2%E5%BC%95%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="toc-number">1.7.</span> <span class="toc-text">7. 索引的设计原则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-SQL-%E6%8F%90%E7%A4%BA-SQL-Hints"><span class="toc-number">1.8.</span> <span class="toc-text">8. SQL 提示 (SQL Hints)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E6%A6%82%E8%BF%B0"><span class="toc-number">1.8.1.</span> <span class="toc-text">8.1 概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E5%B8%B8%E7%94%A8%E8%AF%AD%E6%B3%95"><span class="toc-number">1.8.2.</span> <span class="toc-text">8.2 常用语法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-USE-INDEX-%E5%BB%BA%E8%AE%AE"><span class="toc-number">1.8.2.1.</span> <span class="toc-text">1. USE INDEX (建议)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-IGNORE-INDEX-%E5%BF%BD%E7%95%A5"><span class="toc-number">1.8.2.2.</span> <span class="toc-text">2. IGNORE INDEX (忽略)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-FORCE-INDEX-%E5%BC%BA%E5%88%B6"><span class="toc-number">1.8.2.3.</span> <span class="toc-text">3. FORCE INDEX (强制)</span></a></li></ol></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/01/15/MySQL-SQL%E4%BC%98%E5%8C%96/" title="[MySQL]优化"><img src="/img/MySQL-Logo.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="[MySQL]优化"/></a><div class="content"><a class="title" href="/2026/01/15/MySQL-SQL%E4%BC%98%E5%8C%96/" title="[MySQL]优化">[MySQL]优化</a><time datetime="2026-01-15T15:18:15.000Z" title="发表于 2026-01-15 23:18:15">2026-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/01/15/MySQL-%E7%B4%A2%E5%BC%95/" title="[MySQL]索引"><img src="/img/MySQL-Logo.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="[MySQL]索引"/></a><div class="content"><a class="title" href="/2026/01/15/MySQL-%E7%B4%A2%E5%BC%95/" title="[MySQL]索引">[MySQL]索引</a><time datetime="2026-01-15T15:00:00.000Z" title="发表于 2026-01-15 23:00:00">2026-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By DuckLing-IO</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.1</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.3</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.3"></script><script src="/js/main.js?v=5.5.3"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+
+  const getCount = () => {
+    const countELement = document.getElementById('twikoo-count')
+    if(!countELement) return
+    twikoo.getCommentsCount({
+      envId: 'https://my-blog-comments-tawny.vercel.app/',
+      region: '',
+      urls: [window.location.pathname],
+      includeReply: false
+    }).then(res => {
+      countELement.textContent = res[0].count
+    }).catch(err => {
+      console.error(err)
+    })
+  }
+
+  const init = (el = document, path = location.pathname) => {
+    twikoo.init({
+      el: el.querySelector('#twikoo-wrap'),
+      envId: 'https://my-blog-comments-tawny.vercel.app/',
+      region: '',
+      onCommentLoaded: () => {
+        btf.loadLightbox(document.querySelectorAll('#twikoo .tk-content img:not(.tk-owo-emotion)'))
+      },
+      ...option,
+      path: isShuoshuo ? path : (option && option.path) || path
+    })
+
+    GLOBAL_CONFIG_SITE.pageType === 'post' && getCount()
+
+    isShuoshuo && (window.shuoshuoComment.destroyTwikoo = () => {
+      if (el.children.length) {
+        el.innerHTML = ''
+        el.classList.add('no-comment')
+      }
+    })
+  }
+
+  const loadTwikoo = (el, path) => {
+    if (typeof twikoo === 'object') setTimeout(() => init(el, path), 0)
+    else btf.getScript('https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.all.min.js').then(() => init(el, path))
+  }
+
+  if (isShuoshuo) {
+    'Twikoo' === 'Twikoo'
+      ? window.shuoshuoComment = { loadComment: loadTwikoo }
+      : window.loadOtherComment = loadTwikoo
+    return
+  }
+
+  if ('Twikoo' === 'Twikoo' || !true) {
+    if (true) btf.loadComment(document.getElementById('twikoo-wrap'), loadTwikoo)
+    else loadTwikoo()
+  } else {
+    window.loadOtherComment = loadTwikoo
+  }
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
