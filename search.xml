@@ -13,9 +13,9 @@
       
       <categories>
           
-          <category> 资料 </category>
-          
           <category> 算法 </category>
+          
+          <category> 资料 </category>
           
           <category> STL </category>
           
@@ -143,9 +143,9 @@
       
       <categories>
           
-          <category> 学习笔记 </category>
-          
           <category> 算法 </category>
+          
+          <category> 学习笔记 </category>
           
           <category> 枚举 </category>
           
@@ -188,11 +188,11 @@
       
       <categories>
           
-          <category> 学习笔记 </category>
-          
           <category> 前端 </category>
           
           <category> JavaScript </category>
+          
+          <category> 学习笔记 </category>
           
           <category> 前端 </category>
           
