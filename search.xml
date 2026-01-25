@@ -4,6 +4,43 @@
   
     
     <entry>
+      <title>STL速查</title>
+      <link href="/2026/01/25/STL%E9%80%9F%E6%9F%A5/"/>
+      <url>/2026/01/25/STL%E9%80%9F%E6%9F%A5/</url>
+      
+        <content type="html"><![CDATA[<blockquote><p><strong>通用提示</strong>：</p><ol><li>所有容器均需 <code>using namespace std;</code>。</li><li>所有容器都有 <code>.size()</code> (大小) 和 <code>.empty()</code> (判空)，复杂度均为 $O(1)$，下文不再赘述。</li><li>这里的 $N$ 指容器当前元素个数。</li></ol></blockquote><hr><h3 id="一、-顺序容器-动态数组与字符串"><a href="#一、-顺序容器-动态数组与字符串" class="headerlink" title="一、 顺序容器 (动态数组与字符串)"></a>一、 顺序容器 (动态数组与字符串)</h3><h4 id="1-vector-动态数组"><a href="#1-vector-动态数组" class="headerlink" title="1. vector (动态数组)"></a>1. <code>vector</code> (动态数组)</h4><p><em>头文件:</em> <code>&lt;vector&gt;</code></p><p><em>特点:</em> 尾部操作 $O(1)$，中间插入&#x2F;删除 $O(N)$，随机访问 $O(1)$。</p><ul><li><p><strong>声明与初始化</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">vector&lt;int&gt; v;              // 空数组</span><br><span class="line">vector&lt;int&gt; v(n);           // 大小为 n，默认值为 0</span><br><span class="line">vector&lt;int&gt; v(n, val);      // 大小为 n，初值为 val</span><br><span class="line">vector&lt;int&gt; v = &#123;1, 2, 3&#125;;  // 列表初始化</span><br><span class="line">vector&lt;vector&lt;int&gt;&gt; mat(n, vector&lt;int&gt;(m)); // n*m 二维数组</span><br></pre></td></tr></table></figure></li><li><p><strong>访问</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">v[i];           // 下标访问 (不检查越界)</span><br><span class="line">v.at(i);        // 下标访问 (越界抛异常，慢)</span><br><span class="line">v.front();      // 第一个元素</span><br><span class="line">v.back();       // 最后一个元素</span><br></pre></td></tr></table></figure></li><li><p><strong>修改</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">v.push_back(val);   // 尾插</span><br><span class="line">v.pop_back();       // 尾删</span><br><span class="line">v.clear();          // 清空</span><br><span class="line">v.resize(n, val);   // 重置大小为 n，新增部分补 val</span><br></pre></td></tr></table></figure></li><li><p><strong>迭代器与算法配合</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sort(v.begin(), v.end());                   // 排序</span><br><span class="line">reverse(v.begin(), v.end());                //哪怕翻转</span><br><span class="line">v.erase(unique(v.begin(), v.end()), v.end()); // 去重模板</span><br></pre></td></tr></table></figure></li></ul><h4 id="2-string-字符串"><a href="#2-string-字符串" class="headerlink" title="2. string (字符串)"></a>2. <code>string</code> (字符串)</h4><p><em>头文件:</em> <code>&lt;string&gt;</code></p><p><em>特点:</em> 功能类似 <code>vector&lt;char&gt;</code>，但提供丰富的文本处理方法。</p><ul><li><p><strong>声明与拼接</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">string s = &quot;hello&quot;;</span><br><span class="line">string s(n, &#x27;c&#x27;);    // n 个字符 &#x27;c&#x27;</span><br><span class="line">s += &quot;world&quot;;        // 拼接 $O(len)$</span><br><span class="line">s = s + t;</span><br></pre></td></tr></table></figure></li><li><p><strong>截取与查找 (重点)</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">s.substr(pos, len);       // 返回从 pos 开始长为 len 的子串 (不写 len 截取到末尾)</span><br><span class="line">s.find(str, pos);         // 从 pos 开始找 str，返回下标；找不到返回 string::npos</span><br><span class="line">s.rfind(str);             //以此类推，反向查找</span><br></pre></td></tr></table></figure></li><li><p><strong>修改</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">s.insert(pos, str);       // 在 pos 处插入</span><br><span class="line">s.erase(pos, len);        // 删除从 pos 开始 len 个字符</span><br><span class="line">s.replace(pos, len, str); // 替换</span><br></pre></td></tr></table></figure></li><li><p><strong>类型转换</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">to_string(123);           // int/long long -&gt; string</span><br><span class="line">stoi(s); stoll(s);        // string -&gt; int / long long</span><br></pre></td></tr></table></figure></li></ul><hr><h3 id="二、-双端队列与容器适配器"><a href="#二、-双端队列与容器适配器" class="headerlink" title="二、 双端队列与容器适配器"></a>二、 双端队列与容器适配器</h3><h4 id="3-deque-双端队列"><a href="#3-deque-双端队列" class="headerlink" title="3. deque (双端队列)"></a>3. <code>deque</code> (双端队列)</h4><p><em>头文件:</em> <code>&lt;deque&gt;</code></p><p><em>特点:</em> 头尾增删均为 $O(1)$，支持随机访问（比 vector 慢），常数较大。</p><ul><li><p><strong>操作</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dq.push_front(val);  // 头插</span><br><span class="line">dq.push_back(val);   // 尾插</span><br><span class="line">dq.pop_front();      // 头删</span><br><span class="line">dq.pop_back();       // 尾删</span><br><span class="line">dq[i];               // 随机访问</span><br></pre></td></tr></table></figure></li></ul><h4 id="4-stack-栈"><a href="#4-stack-栈" class="headerlink" title="4. stack (栈)"></a>4. <code>stack</code> (栈)</h4><p><em>头文件:</em> <code>&lt;stack&gt;</code></p><p><em>特点:</em> LIFO (后进先出)，<strong>不支持</strong>迭代器和随机访问。</p><ul><li><p><strong>操作</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">st.push(val);   // 入栈</span><br><span class="line">st.pop();       // 出栈 (无返回值)</span><br><span class="line">st.top();       // 获取栈顶元素</span><br></pre></td></tr></table></figure></li></ul><h4 id="5-queue-队列"><a href="#5-queue-队列" class="headerlink" title="5. queue (队列)"></a>5. <code>queue</code> (队列)</h4><p><em>头文件:</em> <code>&lt;queue&gt;</code></p><p><em>特点:</em> FIFO (先进先出)，<strong>不支持</strong>迭代器。</p><ul><li><p><strong>操作</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">q.push(val);    // 入队</span><br><span class="line">q.pop();        // 出队 (无返回值)</span><br><span class="line">q.front();      // 队首元素</span><br><span class="line">q.back();       // 队尾元素</span><br></pre></td></tr></table></figure></li></ul><h4 id="6-priority-queue-优先队列-堆"><a href="#6-priority-queue-优先队列-堆" class="headerlink" title="6. priority_queue (优先队列&#x2F;堆)"></a>6. <code>priority_queue</code> (优先队列&#x2F;堆)</h4><p><em>头文件:</em> <code>&lt;queue&gt;</code></p><p><em>特点:</em> 自动排序，插入&#x2F;删除 $O(\log N)$，查看堆顶 $O(1)$。</p><ul><li><p><strong>声明</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">priority_queue&lt;int&gt; pq;                            // 大根堆 (默认)</span><br><span class="line">priority_queue&lt;int, vector&lt;int&gt;, greater&lt;int&gt;&gt; pq; // 小根堆</span><br><span class="line">// 自定义结构体需重载 &lt; 运算符，或者写 struct cmp</span><br></pre></td></tr></table></figure></li><li><p><strong>操作</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pq.push(val);   // 入堆</span><br><span class="line">pq.pop();       // 堆顶元素出堆</span><br><span class="line">pq.top();       // 查看堆顶</span><br></pre></td></tr></table></figure></li></ul><hr><h3 id="三、-关联容器-有序，红黑树实现"><a href="#三、-关联容器-有序，红黑树实现" class="headerlink" title="三、 关联容器 (有序，红黑树实现)"></a>三、 关联容器 (有序，红黑树实现)</h3><p><strong>复杂度:</strong> 增删查均为 $O(\log N)$。</p><p><strong>注意:</strong> <code>multiset</code> &#x2F; <code>multimap</code> 允许键值重复。</p><h4 id="7-set-multiset-集合"><a href="#7-set-multiset-集合" class="headerlink" title="7. set &#x2F; multiset (集合)"></a>7. <code>set</code> &#x2F; <code>multiset</code> (集合)</h4><p><em>头文件:</em> <code>&lt;set&gt;</code></p><p><em>特点:</em> <code>set</code> 去重且有序，<code>multiset</code> 不去重但有序。</p><ul><li><p><strong>操作</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">s.insert(val);          // 插入</span><br><span class="line">s.erase(val);           // set: 删除值为 val 的元素; multiset: 删除所有值为 val 的元素</span><br><span class="line">s.erase(iterator);      // 删除迭代器指向的元素 (multiset 删单个常用技巧)</span><br><span class="line">s.find(val);            // 返回迭代器，找不到返回 s.end()</span><br><span class="line">s.count(val);           // 返回出现次数 (set 只有 0 或 1)</span><br></pre></td></tr></table></figure></li><li><p><strong>二分查找 (核心)</strong></p><p><em>注意：必须用成员函数，用 <code>std::lower_bound</code> 会退化为 $O(N)$</em></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s.lower_bound(val);     // 返回首个 &gt;= val 的迭代器</span><br><span class="line">s.upper_bound(val);     // 返回首个 &gt; val 的迭代器</span><br></pre></td></tr></table></figure></li><li><p><strong>遍历</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">for(auto it = s.begin(); it != s.end(); ++it) &#123; cout &lt;&lt; *it; &#125;</span><br><span class="line">// 访问最大值: *s.rbegin()</span><br></pre></td></tr></table></figure></li></ul><h4 id="8-map-multimap-映射"><a href="#8-map-multimap-映射" class="headerlink" title="8. map &#x2F; multimap (映射)"></a>8. <code>map</code> &#x2F; <code>multimap</code> (映射)</h4><p><em>头文件:</em> <code>&lt;map&gt;</code></p><p><em>特点:</em> Key-Value 对，按 Key 排序。</p><ul><li><p><strong>访问与插入</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mp[key] = val;          // (仅 map) 下标访问，若 key 不存在会自动创建，初值为 0</span><br><span class="line">mp.at(key);             // 访问，不存在抛异常</span><br><span class="line">mp.insert(&#123;key, val&#125;);  // 插入 pair</span><br></pre></td></tr></table></figure></li><li><p><strong>查找与删除</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mp.find(key);           // 返回迭代器 (pair 指针)，it-&gt;first 是键, it-&gt;second 是值</span><br><span class="line">mp.count(key);          // 判断 key 是否存在</span><br><span class="line">mp.erase(key);          // 删除</span><br><span class="line">mp.erase(iterator);</span><br></pre></td></tr></table></figure></li><li><p><strong>二分</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mp.lower_bound(key);    // 针对 Key 查找 &gt;= 的迭代器</span><br></pre></td></tr></table></figure></li></ul><hr><h3 id="四、-无序关联容器-哈希表实现"><a href="#四、-无序关联容器-哈希表实现" class="headerlink" title="四、 无序关联容器 (哈希表实现)"></a>四、 无序关联容器 (哈希表实现)</h3><p><strong>复杂度:</strong> 增删查平均 $O(1)$，最坏 $O(N)$。</p><p><strong>注意:</strong> 内部无序，不支持 <code>lower_bound</code>&#x2F;<code>upper_bound</code>。</p><h4 id="9-unordered-set-unordered-map"><a href="#9-unordered-set-unordered-map" class="headerlink" title="9. unordered_set &#x2F; unordered_map"></a>9. <code>unordered_set</code> &#x2F; <code>unordered_map</code></h4><p><em>头文件:</em> <code>&lt;unordered_set&gt;</code>, <code>&lt;unordered_map&gt;</code></p><p><em>特点:</em> 语法几乎同 <code>set</code>&#x2F;<code>map</code>，但通常更快。</p><ul><li><p><strong>差异点</strong></p><ul><li><strong>没有</strong> <code>lower_bound</code>, <code>upper_bound</code>。</li><li><strong>没有</strong> 自动排序。</li><li><strong>自定义类型作为 Key</strong> 需要手写 Hash 函数。</li></ul></li><li><p><strong>用法示例</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">unordered_map&lt;int, int&gt; ump;</span><br><span class="line">ump[5] = 10;</span><br><span class="line">if (ump.count(5)) &#123; ... &#125;</span><br></pre></td></tr></table></figure></li></ul><hr><h3 id="五、-链表-较少用"><a href="#五、-链表-较少用" class="headerlink" title="五、 链表 (较少用)"></a>五、 链表 (较少用)</h3><h4 id="10-list-双向链表"><a href="#10-list-双向链表" class="headerlink" title="10. list (双向链表)"></a>10. <code>list</code> (双向链表)</h4><p><em>头文件:</em> <code>&lt;list&gt;</code></p><p><em>特点:</em> 任意位置插入删除 $O(1)$ (需已知迭代器)，不支持随机访问。</p><ul><li><p><strong>操作</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lst.push_back(val);</span><br><span class="line">lst.push_front(val);</span><br><span class="line">lst.insert(it, val);    // 在迭代器 it 前插入</span><br><span class="line">lst.erase(it);          // 删除迭代器 it 处元素</span><br></pre></td></tr></table></figure></li><li><p><strong>特殊接合 (Splice)</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lst.splice(pos_it, other_list); // 将 other_list 所有元素移动到 pos_it 之前 (O(1))</span><br></pre></td></tr></table></figure></li><li><p><strong>专用算法 (比 std:: 快)</strong></p><p>C++</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lst.sort();             // 必须用成员函数 sort，不能用 std::sort</span><br><span class="line">lst.remove(val);        // 删除所有值为 val 的元素</span><br><span class="line">lst.unique();           // 去除相邻重复</span><br><span class="line">lst.reverse();          // 翻转</span><br></pre></td></tr></table></figure></li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> 资料 </category>
+          
+          <category> 算法 </category>
+          
+          <category> STL </category>
+          
+          <category> STL </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实用资料 </tag>
+            
+            <tag> C++ </tag>
+            
+            <tag> 算法 </tag>
+            
+            <tag> STL </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>[算法]二分法</title>
       <link href="/2026/01/25/%E7%AE%97%E6%B3%95-%E4%BA%8C%E5%88%86%E6%B3%95/"/>
       <url>/2026/01/25/%E7%AE%97%E6%B3%95-%E4%BA%8C%E5%88%86%E6%B3%95/</url>
@@ -22,9 +59,9 @@
       
         <tags>
             
-            <tag> 算法 </tag>
-            
             <tag> C++ </tag>
+            
+            <tag> 算法 </tag>
             
         </tags>
       
@@ -69,9 +106,9 @@
           
           <category> HTTP协议 </category>
           
-          <category> 学习笔记 </category>
-          
           <category> 资料 </category>
+          
+          <category> 学习笔记 </category>
           
           <category> HTTP </category>
           
@@ -106,9 +143,9 @@
       
       <categories>
           
-          <category> 算法 </category>
-          
           <category> 学习笔记 </category>
+          
+          <category> 算法 </category>
           
           <category> 枚举 </category>
           
@@ -125,9 +162,9 @@
       
         <tags>
             
-            <tag> 算法 </tag>
-            
             <tag> C++ </tag>
+            
+            <tag> 算法 </tag>
             
             <tag> 日常练习 </tag>
             
@@ -151,11 +188,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 前端 </category>
           
           <category> JavaScript </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 前端 </category>
           
