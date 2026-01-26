@@ -4,6 +4,51 @@
   
     
     <entry>
+      <title>[SpringBoot]PageHelper插件</title>
+      <link href="/2026/01/26/SpringBoot-PageHelper%E6%8F%92%E4%BB%B6/"/>
+      <url>/2026/01/26/SpringBoot-PageHelper%E6%8F%92%E4%BB%B6/</url>
+      
+        <content type="html"><![CDATA[<blockquote><p><strong>PageHelper是第三方提供的Mybatis框架中的一款功能强大、方便易用的分页插件，支持任何形式的单标、多表的分页查询。</strong></p><p>官网：<a href="https://pagehelper.github.io/">https://pagehelper.github.io/</a></p></blockquote><h1 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h1><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--分页插件PageHelper--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.github.pagehelper<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>pagehelper-spring-boot-starter<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.4.7<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure><h1 id="无插件下的分页查询操作"><a href="#无插件下的分页查询操作" class="headerlink" title="无插件下的分页查询操作"></a>无插件下的分页查询操作</h1><h2 id="Service层"><a href="#Service层" class="headerlink" title="Service层"></a>Service层</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">   <span class="meta">@Override</span></span><br><span class="line"><span class="comment">//参数：</span></span><br><span class="line"><span class="comment">//-page 要查询的页数</span></span><br><span class="line"><span class="comment">//-pageSize 每页的数据数</span></span><br><span class="line">   <span class="keyword">public</span> pageResult&lt;Emp&gt; <span class="title function_">page</span><span class="params">(Integer page, Integer pageSize)</span> &#123;</span><br><span class="line">       <span class="type">Long</span> <span class="variable">count</span> <span class="operator">=</span> empMapper.count(); <span class="comment">//调用Mapper层的方法获取总数据数</span></span><br><span class="line">       List&lt;Emp&gt; list = empMapper.list((page - <span class="number">1</span>) * pageSize, pageSize);</span><br><span class="line">       <span class="comment">//调用Mapper层的方法调用当前页的数据列表</span></span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">pageResult</span>&lt;Emp&gt;(count, list);</span><br><span class="line">       <span class="comment">//返回给Controller层一个实体类</span></span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure><h2 id="Mapper层"><a href="#Mapper层" class="headerlink" title="Mapper层"></a>Mapper层</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//查询数据总数</span></span><br><span class="line">    <span class="meta">@Select(&quot;select count(*) from emp e left join dept d on e.dept_id = d.id&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> Long <span class="title function_">count</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//分页查询</span></span><br><span class="line">    <span class="meta">@Select(&quot;select e.* , d.name deptName &quot; +</span></span><br><span class="line"><span class="meta">            &quot;from emp e left join dept d on e.dept_id = d.id &quot; +</span></span><br><span class="line"><span class="meta">            &quot;order by e.update_time desc &quot; +</span></span><br><span class="line"><span class="meta">            &quot;limit #&#123;start&#125;, #&#123;pageSize&#125;&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> List&lt;Emp&gt; <span class="title function_">list</span><span class="params">(Integer start, Integer pageSize)</span>;</span><br></pre></td></tr></table></figure><h1 id="PageHelper插件优化"><a href="#PageHelper插件优化" class="headerlink" title="PageHelper插件优化"></a>PageHelper插件优化</h1><h2 id="Service层-1"><a href="#Service层-1" class="headerlink" title="Service层"></a>Service层</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> PageResult <span class="title function_">page</span><span class="params">(Integer page, Integer pageSize)</span> &#123;</span><br><span class="line">      <span class="comment">//1. 设置分页参数</span></span><br><span class="line">      PageHelper.startPage(page,pageSize);</span><br><span class="line"></span><br><span class="line">      <span class="comment">//2. 执行查询</span></span><br><span class="line">      List&lt;Emp&gt; empList = empMapper.list();</span><br><span class="line">      <span class="comment">//强制类型转换</span></span><br><span class="line">      Page&lt;Emp&gt; p = (Page&lt;Emp&gt;) empList;</span><br><span class="line"></span><br><span class="line">      <span class="comment">//3. 封装结果</span></span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">PageResult</span>(p.getTotal(), p.getResult());</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><h2 id="Mapper层-1"><a href="#Mapper层-1" class="headerlink" title="Mapper层"></a>Mapper层</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Select(&quot;select e.*, d.name deptName &quot; +</span></span><br><span class="line"><span class="meta">           &quot;from emp as e left join dept as d on e.dept_id = d.id&quot;)</span></span><br><span class="line">   <span class="keyword">public</span> List&lt;Emp&gt; <span class="title function_">list</span><span class="params">()</span>;</span><br></pre></td></tr></table></figure><h1 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h1><p>引用PageHelper插件后只需在Mapper层声明一个查询所需属性的SELECT语句即可，在运行时，该插件会自动注入SQL语句</p><ul><li><p>第一条SQL语句，用来查询总记录数</p><p>将查询返回的字段列表替换成了 <code>count(0)</code> 来统计总记录数。</p></li><li><p>第二条SQL语句，用来进行分页查询</p><p>查询指定页码对应 的数据列表。在SQL语句之后拼接上了<code>limit</code>进行分页查询</p></li></ul><img src="/2026/01/26/SpringBoot-PageHelper%E6%8F%92%E4%BB%B6/image-20260126153411332.png" class="" title="在JVM控制台中的信息"><p>PageHelper在进行分页查询时，会执行上述图片中两条SQL语句，并将查询到的总记录数，与数据列表封装到了 <code>Page&lt;Emp&gt;</code> 对象中，我们再获取查询结果时，只需要调用Page对象的方法就可以获取。</p><h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul><li><p>PageHelper实现分页查询时，SQL语句的结尾一定一定一定不要加分号(;).。</p></li><li><p>PageHelper只会对紧跟在其后的第一条SQL语句进行分页处理。</p><p>若在Service方法中多写一条SQL语句 则会原样输出</p><img src="/2026/01/26/SpringBoot-PageHelper%E6%8F%92%E4%BB%B6/image-20260126154029085.png" class="" title="错误示范"><p>因为调用的Mapper层中的SQL语句原本是查整个表的数据 所以第二个查询操作只会原样输出整个表的数据</p></li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> 后端 </category>
+          
+          <category> 资料 </category>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 后端 </category>
+          
+          <category> SpringBoot </category>
+          
+          <category> SpringBoot </category>
+          
+          <category> SpringBoot </category>
+          
+          <category> PageHelper </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实用资料 </tag>
+            
+            <tag> 学习笔记 </tag>
+            
+            <tag> 后端 </tag>
+            
+            <tag> SpringBoot </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>STL速查</title>
       <link href="/2026/01/25/STL%E9%80%9F%E6%9F%A5/"/>
       <url>/2026/01/25/STL%E9%80%9F%E6%9F%A5/</url>
@@ -13,9 +58,9 @@
       
       <categories>
           
-          <category> 算法 </category>
-          
           <category> 资料 </category>
+          
+          <category> 算法 </category>
           
           <category> STL </category>
           
@@ -143,9 +188,9 @@
       
       <categories>
           
-          <category> 算法 </category>
-          
           <category> 学习笔记 </category>
+          
+          <category> 算法 </category>
           
           <category> 枚举 </category>
           
