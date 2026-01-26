@@ -4,6 +4,43 @@
   
     
     <entry>
+      <title>[MyBatis]动态SQL</title>
+      <link href="/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/"/>
+      <url>/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/</url>
+      
+        <content type="html"><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><blockquote><p>动态SQL，指的就是随着用户的输入或外部的条件的变化而变化的SQL语句。</p></blockquote><p>比如说现在根据这个员工查询系统设计后端逻辑</p><img src="/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/image-20260126175645753.png" class="" title="员工查询系统"><p>前端会请求姓名 | 性别 | 入职开始日期 | 入职结束日期 但是不是每次请求都返回完完整整的四个参数</p><p>如果只根据姓名查询 或者只根据性别查询，则最普通的<code>WHERE ... AND ...</code>SQL语句查询不了这种情况</p><p>所以MyBatis提供了一中拼接and语句的SQL注入方式</p><p>该操作需要在定义在xml文件中的SQL语句进行修改</p><h1 id="if-test-标签"><a href="#if-test-标签" class="headerlink" title="if test 标签"></a>if test 标签</h1><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;判断条件&quot;</span>&gt;</span></span><br><span class="line">    待拼接语句</span><br><span class="line"><span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br></pre></td></tr></table></figure><p>当<code>test</code>后的判断条件成立时才会拼接包围的SQL语句</p><p>但是这样做仍有一个弊端 比如需要执行 <code>WHERE a = ? AND b = ?</code></p><p>当我a的判断条件不成立而b的判断条件成立时 只会进行b的拼接 就变成了&#96;&#96;WHERE AND b &#x3D; ?&#96;</p><p>这显然是语法错误了</p><p>所以需要引入<code>where</code>这个标签</p><h1 id="WHERE-标签"><a href="#WHERE-标签" class="headerlink" title="WHERE 标签"></a>WHERE 标签</h1><p>被<code>where</code>包围的所有<code>if test</code>标签会自动选择是否拼接<code>AND</code></p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--定义 Mapper 映射文件的约束和基本结构--&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">mapper</span></span></span><br><span class="line"><span class="meta">        <span class="keyword">PUBLIC</span> <span class="string">&quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;</span></span></span><br><span class="line"><span class="meta">        <span class="string">&quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">mapper</span> <span class="attr">namespace</span>=<span class="string">&quot;com.duckling.mapper.EmpMapper&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;list&quot;</span> <span class="attr">resultType</span>=<span class="string">&quot;com.duckling.pojo.Emp&quot;</span>&gt;</span></span><br><span class="line">        select e.*, d.name deptName from emp as e left join dept as d on e.dept_id = d.id</span><br><span class="line">        <span class="tag">&lt;<span class="name">where</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;name != null and name != &#x27;&#x27;&quot;</span>&gt;</span></span><br><span class="line">                e.name like concat(&#x27;%&#x27;,#&#123;name&#125;,&#x27;%&#x27;)</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;gender != null&quot;</span>&gt;</span></span><br><span class="line">                and e.gender = #&#123;gender&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;begin != null and end != null&quot;</span>&gt;</span></span><br><span class="line">                and e.entry_date between #&#123;begin&#125; and #&#123;end&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">where</span>&gt;</span></span><br><span class="line">        order by e.update_time desc</span><br><span class="line">    <span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">mapper</span>&gt;</span></span><br></pre></td></tr></table></figure><p>在这个<code>xml</code>文件中</p><p><code>where</code>标签包围了三个<code>if test</code>标签 但是当<code>name</code>不生效时，后边的某一个生效时会自动去掉<code>AND</code>使得SQL语法合法</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 后端 </category>
+          
+          <category> MyBatis </category>
+          
+          <category> 资料 </category>
+          
+          <category> MyBatis </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实用资料 </tag>
+            
+            <tag> 后端 </tag>
+            
+            <tag> MyBatis </tag>
+            
+            <tag> 数据库 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>[SpringBoot]PageHelper插件</title>
       <link href="/2026/01/26/SpringBoot-PageHelper%E6%8F%92%E4%BB%B6/"/>
       <url>/2026/01/26/SpringBoot-PageHelper%E6%8F%92%E4%BB%B6/</url>
@@ -36,9 +73,9 @@
             
             <tag> 实用资料 </tag>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 后端 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -125,9 +162,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 后端 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -285,11 +322,11 @@
       
         <tags>
             
+            <tag> 数据库 </tag>
+            
             <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
-            
-            <tag> 数据库 </tag>
             
         </tags>
       
@@ -322,11 +359,11 @@
       
         <tags>
             
+            <tag> 数据库 </tag>
+            
             <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
-            
-            <tag> 数据库 </tag>
             
         </tags>
       
@@ -359,11 +396,11 @@
       
         <tags>
             
+            <tag> 数据库 </tag>
+            
             <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
-            
-            <tag> 数据库 </tag>
             
         </tags>
       
@@ -396,11 +433,11 @@
       
         <tags>
             
+            <tag> 数据库 </tag>
+            
             <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
-            
-            <tag> 数据库 </tag>
             
         </tags>
       
@@ -433,11 +470,11 @@
       
         <tags>
             
+            <tag> 数据库 </tag>
+            
             <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
-            
-            <tag> 数据库 </tag>
             
         </tags>
       

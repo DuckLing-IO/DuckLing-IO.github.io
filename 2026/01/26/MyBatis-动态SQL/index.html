@@ -1,0 +1,246 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>[MyBatis]动态SQL | DuckLing's Blog</title><meta name="author" content="DuckLing"><meta name="copyright" content="DuckLing"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#0d0d0d"><meta name="description" content="简介 动态SQL，指的就是随着用户的输入或外部的条件的变化而变化的SQL语句。  比如说现在根据这个员工查询系统设计后端逻辑   前端会请求姓名 | 性别 | 入职开始日期 | 入职结束日期 但是不是每次请求都返回完完整整的四个参数 如果只根据姓名查询 或者只根据性别查询，则最普通的WHERE ... AND ...SQL语句查询不了这种情况 所以MyBatis提供了一中拼接and语句的SQL注入">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[MyBatis]动态SQL">
+<meta property="og:url" content="https://duckling-io.github.io/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/index.html">
+<meta property="og:site_name" content="DuckLing&#39;s Blog">
+<meta property="og:description" content="简介 动态SQL，指的就是随着用户的输入或外部的条件的变化而变化的SQL语句。  比如说现在根据这个员工查询系统设计后端逻辑   前端会请求姓名 | 性别 | 入职开始日期 | 入职结束日期 但是不是每次请求都返回完完整整的四个参数 如果只根据姓名查询 或者只根据性别查询，则最普通的WHERE ... AND ...SQL语句查询不了这种情况 所以MyBatis提供了一中拼接and语句的SQL注入">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://duckling-io.github.io/img/post_MyBatis.png">
+<meta property="article:published_time" content="2026-01-26T09:49:44.000Z">
+<meta property="article:modified_time" content="2026-01-26T10:10:27.317Z">
+<meta property="article:author" content="DuckLing">
+<meta property="article:tag" content="MyBatis">
+<meta property="article:tag" content="后端">
+<meta property="article:tag" content="实用资料">
+<meta property="article:tag" content="数据库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://duckling-io.github.io/img/post_MyBatis.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "[MyBatis]动态SQL",
+  "url": "https://duckling-io.github.io/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/",
+  "image": "https://duckling-io.github.io/img/post_MyBatis.png",
+  "datePublished": "2026-01-26T09:49:44.000Z",
+  "dateModified": "2026-01-26T10:10:27.317Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "DuckLing",
+      "url": "https://DuckLing-IO.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://duckling-io.github.io/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.3"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><link rel="stylesheet" href="/true" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '[MyBatis]动态SQL',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">17</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 相关链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/home.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">DuckLing's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">[MyBatis]动态SQL</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 相关链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">[MyBatis]动态SQL</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-01-26T09:49:44.000Z" title="发表于 2026-01-26 17:49:44">2026-01-26</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-01-26T10:10:27.317Z" title="更新于 2026-01-26 18:10:27">2026-01-26</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%90%8E%E7%AB%AF/">后端</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%90%8E%E7%AB%AF/MyBatis/">MyBatis</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%B5%84%E6%96%99/">资料</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%B5%84%E6%96%99/MyBatis/">MyBatis</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">529</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>2分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><blockquote>
+<p>动态SQL，指的就是随着用户的输入或外部的条件的变化而变化的SQL语句。</p>
+</blockquote>
+<p>比如说现在根据这个员工查询系统设计后端逻辑</p>
+<img src="/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/image-20260126175645753.png" class="" title="员工查询系统">
+
+<p>前端会请求姓名 | 性别 | 入职开始日期 | 入职结束日期 但是不是每次请求都返回完完整整的四个参数</p>
+<p>如果只根据姓名查询 或者只根据性别查询，则最普通的<code>WHERE ... AND ...</code>SQL语句查询不了这种情况</p>
+<p>所以MyBatis提供了一中拼接and语句的SQL注入方式</p>
+<p>该操作需要在定义在xml文件中的SQL语句进行修改</p>
+<h1 id="if-test-标签"><a href="#if-test-标签" class="headerlink" title="if test 标签"></a>if test 标签</h1><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;判断条件&quot;</span>&gt;</span></span><br><span class="line">    待拼接语句</span><br><span class="line"><span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>当<code>test</code>后的判断条件成立时才会拼接包围的SQL语句</p>
+<p>但是这样做仍有一个弊端 比如需要执行 <code>WHERE a = ? AND b = ?</code></p>
+<p>当我a的判断条件不成立而b的判断条件成立时 只会进行b的拼接 就变成了&#96;&#96;WHERE AND b &#x3D; ?&#96;</p>
+<p>这显然是语法错误了</p>
+<p>所以需要引入<code>where</code>这个标签</p>
+<h1 id="WHERE-标签"><a href="#WHERE-标签" class="headerlink" title="WHERE 标签"></a>WHERE 标签</h1><p>被<code>where</code>包围的所有<code>if test</code>标签会自动选择是否拼接<code>AND</code></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--定义 Mapper 映射文件的约束和基本结构--&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">mapper</span></span></span><br><span class="line"><span class="meta">        <span class="keyword">PUBLIC</span> <span class="string">&quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;</span></span></span><br><span class="line"><span class="meta">        <span class="string">&quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">mapper</span> <span class="attr">namespace</span>=<span class="string">&quot;com.duckling.mapper.EmpMapper&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;list&quot;</span> <span class="attr">resultType</span>=<span class="string">&quot;com.duckling.pojo.Emp&quot;</span>&gt;</span></span><br><span class="line">        select e.*, d.name deptName from emp as e left join dept as d on e.dept_id = d.id</span><br><span class="line">        <span class="tag">&lt;<span class="name">where</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;name != null and name != &#x27;&#x27;&quot;</span>&gt;</span></span><br><span class="line">                e.name like concat(&#x27;%&#x27;,#&#123;name&#125;,&#x27;%&#x27;)</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;gender != null&quot;</span>&gt;</span></span><br><span class="line">                and e.gender = #&#123;gender&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;begin != null and end != null&quot;</span>&gt;</span></span><br><span class="line">                and e.entry_date between #&#123;begin&#125; and #&#123;end&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">where</span>&gt;</span></span><br><span class="line">        order by e.update_time desc</span><br><span class="line">    <span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">mapper</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>在这个<code>xml</code>文件中</p>
+<p><code>where</code>标签包围了三个<code>if test</code>标签 但是当<code>name</code>不生效时，后边的某一个生效时会自动去掉<code>AND</code>使得SQL语法合法</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://DuckLing-IO.github.io">DuckLing</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://duckling-io.github.io/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/">https://duckling-io.github.io/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://DuckLing-IO.github.io" target="_blank">DuckLing's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%AE%9E%E7%94%A8%E8%B5%84%E6%96%99/">实用资料</a><a class="post-meta__tags" href="/tags/%E5%90%8E%E7%AB%AF/">后端</a><a class="post-meta__tags" href="/tags/MyBatis/">MyBatis</a><a class="post-meta__tags" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a></div><div class="post-share"><div class="social-share" data-image="/img/post_MyBatis.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/01/26/SpringBoot-PageHelper%E6%8F%92%E4%BB%B6/" title="[SpringBoot]PageHelper插件"><img class="cover" src="/img/post_springboot_260124.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">[SpringBoot]PageHelper插件</div></div><div class="info-2"><div class="info-item-1"> PageHelper是第三方提供的Mybatis框架中的一款功能强大、方便易用的分页插件，支持任何形式的单标、多表的分页查询。 官网：https://pagehelper.github.io/  依赖123456&lt;!--分页插件PageHelper--&gt;&lt;dependency&gt;    &lt;groupId&gt;com.github.pagehelper&lt;/groupId&gt;    &lt;artifactId&gt;pagehelper-spring-boot-starter&lt;/artifactId&gt;    &lt;version&gt;1.4.7&lt;/version&gt;&lt;/dependency&gt;    无插件下的分页查询操作Service层1234567891011   @Override//参数：//-page 要查询的页数//-pageSize 每页的数据数   public pageResult&lt;Emp&gt; page(Integer page, Integer pageSize) &#123...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/01/26/SpringBoot-PageHelper%E6%8F%92%E4%BB%B6/" title="[SpringBoot]PageHelper插件"><img class="cover" src="/img/post_springboot_260124.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-01-26</div><div class="info-item-2">[SpringBoot]PageHelper插件</div></div><div class="info-2"><div class="info-item-1"> PageHelper是第三方提供的Mybatis框架中的一款功能强大、方便易用的分页插件，支持任何形式的单标、多表的分页查询。 官网：https://pagehelper.github.io/  依赖123456&lt;!--分页插件PageHelper--&gt;&lt;dependency&gt;    &lt;groupId&gt;com.github.pagehelper&lt;/groupId&gt;    &lt;artifactId&gt;pagehelper-spring-boot-starter&lt;/artifactId&gt;    &lt;version&gt;1.4.7&lt;/version&gt;&lt;/dependency&gt;    无插件下的分页查询操作Service层1234567891011   @Override//参数：//-page 要查询的页数//-pageSize 每页的数据数   public pageResult&lt;Emp&gt; page(Integer page, Integer pageSize) &#123...</div></div></div></a><a class="pagination-related" href="/2026/01/16/MySQL-%E8%A7%86%E5%9B%BE-%E8%A7%A6%E5%8F%91%E5%99%A8/" title="[MySQL]视图&amp;触发器"><img class="cover" src="/img/MySQL-Logo.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-01-16</div><div class="info-item-2">[MySQL]视图&amp;触发器</div></div><div class="info-2"><div class="info-item-1">  视图 (Views)1. 核心定义视图是一个虚拟表，其内容由查询定义。  同真实的表一样，视图包含一系列带有名称的列和行数据。 关键点：视图并不在数据库中以存储的数据值集形式存在（不占物理空间，只存定义）。行和列数据来自由定义视图的查询所引用的表，并且在引用视图时动态生成。  2. 语法操作创建视图1234CREATE [OR REPLACE] [ALGORITHM = &#123;UNDEFINED | MERGE | TEMPTABLE&#125;]VIEW view_name [(column_list)]AS select_statement[WITH [CASCADED | LOCAL] CHECK OPTION];   ALGORITHM 参数详解: MERGE: 将视图的SQL语句与外部查询合并（效率高，优先推荐）。 TEMPTABLE: 将视图结果存入临时表，再执行外部查询（无法更新数据）。 UNDEFINED: 让MySQL自动选择（默认）。   WITH CHECK OPTION: 更新视图数据时，强行保证数据仍符合视图定义的 WHERE 条件，否则报错。...</div></div></div></a><a class="pagination-related" href="/2026/01/15/MySQL-SQL%E4%BC%98%E5%8C%96/" title="[MySQL]优化"><img class="cover" src="/img/MySQL-Logo.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-01-15</div><div class="info-item-2">[MySQL]优化</div></div><div class="info-2"><div class="info-item-1">1. 插入数据优化 (Insert Optimization)核心目标： 减少磁盘I&#x2F;O交互次数，降低日志刷新频率。  批量插入 (Batch Insert): 不要使用多条 INSERT INTO 语句，合并为一条。 12-- 推荐INSERT INTO tb_test VALUES (1,&#x27;a&#x27;), (2,&#x27;b&#x27;), (3,&#x27;c&#x27;);  手动事务控制 (Manual Transaction): 如果插入数据量大（例如几千条），不要让数据库自动提交事务。手动开启事务，执行完后一次提交。 1234START TRANSACTION;INSERT ...;INSERT ...;COMMIT;  主键顺序插入: 数据按照主键顺序插入效率最高，减少由于页分裂 (Page Split) 带来的性能损耗。  大批量导入 (Load Data): 对于百万级以上数据，使用 LOAD DATA INFILE 指令，性能远超 INSERT。 1LOAD DATA LOCAL INFILE &#x27;/path/to/data...</div></div></div></a><a class="pagination-related" href="/2026/01/15/MySQL-%E7%B4%A2%E5%BC%95/" title="[MySQL]索引"><img class="cover" src="/img/MySQL-Logo.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-01-15</div><div class="info-item-2">[MySQL]索引</div></div><div class="info-2"><div class="info-item-1">MySQL 索引核心知识体系总结1. 索引概述 定义：索引（Index）是帮助 MySQL 高效获取数据的数据结构（有序）。 本质：空间换时间。 优缺点： 优点： 大大减少服务器扫描的数据量（降低 I&#x2F;O 成本）。 帮助服务器避免排序和临时表（降低 CPU 成本）。   缺点： 占用磁盘空间。 降低写操作（INSERT, UPDATE, DELETE）的速度，因为需要维护索引结构。      2. 索引结构 (InnoDB)MySQL 默认存储引擎 InnoDB 使用 B+ Tree 结构。  B+ Tree 特点： 非叶子节点仅存储键值（Key）和指针，不存储数据，增加了节点的度（Fan-out），树的高度通常控制在 3-4 层，减少 I&#x2F;O 次数。 叶子节点存储所有数据（Key + Row Data 或 Key + PK），且叶子节点之间通过双向链表连接。 扫库方便：支持范围查询，全表扫描只需遍历叶子节点链表。   为什么不用其他结构？ Hash：仅支持精确匹配（=），不支持范围查询（&gt;, &lt;），不支持排序。 二叉树&#x2F;红黑树：大数据量...</div></div></div></a><a class="pagination-related" href="/2026/01/17/MySQL-%E9%94%81/" title="[MySQL]锁"><img class="cover" src="/img/MySQL-Logo.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-01-17</div><div class="info-item-2">[MySQL]锁</div></div><div class="info-2"><div class="info-item-1">MySQL 锁机制 核心摘要：MySQL 的锁机制主要用于管理共享资源的并发访问。根据加锁粒度，主要分为 全局锁、表级锁 和 行级锁。  一、 全局锁 (Global Locks)全局锁就是对整个数据库实例加锁。 1. 核心作用让整个库处于 只读状态 (Read-Only)。 2. 语法演示 加锁命令： 1FLUSH TABLES WITH READ LOCK;  解锁命令： 1UNLOCK TABLES;  (注意：如果客户端连接断开，锁也会自动释放)   3. 锁生效后的行为代码演示假设我们执行了上面的加锁命令，此时不同类型的 SQL 语句表现如下： 123456789-- 1. 查询语句 (DQL) -&gt; ✅ 成功SELECT * FROM user_info;-- 2. 数据更新语句 (DML) -&gt; ❌ 阻塞 (Blocked)INSERT INTO user_info (name) VALUES (&#x27;Alice&#x27;);-- 状态：一直等待，直到全局锁释放或超时-- 3. 表结构修改语句 (DDL) -&gt; ❌ 阻塞 (Blocked)...</div></div></div></a><a class="pagination-related" href="/2026/01/15/MySQL-%E5%9F%BA%E7%A1%80%E6%93%8D%E4%BD%9C/" title="[MySQL]基础操作"><img class="cover" src="/img/MySQL-Logo.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-01-15</div><div class="info-item-2">[MySQL]基础操作</div></div><div class="info-2"><div class="info-item-1">DDL基本操作1.数据库操作查询查询所有数据库 1SHOW DATABASES;  查询当前的数据库 1SELECT DATABASE();  创建数据库 1CREATE DATABASE [IF NOT EXISTS] 数据库名 [DEFAULT CHARSET 字符集] [COLLATE 排列顺序];  注：[ ]内可不写 删除数据库 1DROP DATABASE [IF EXISTS] 数据库名;  使用数据库 1USE 数据库名;  查询当前数据库中所有的表 1SHOW TABLES;  查询表结构 1DESC 表名;  查询指定表的建表语句 1SHOW CREATE TABLE 表名;  ###创建创建表 1234567CREATE TABLE 表名(	字段1 字段1类型[COMMENT 字段1注释],	字段1 字段1类型[COMMENT 字段1注释],	字段1 字段1类型[COMMENT 字段1注释],......	字段1 字段1类型[COMMENT 字段1注释])[COMMENT 表注释]  注：[…]内为可选项   最后一个字段后没有逗号在MySQL中字符串数据类...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="twikoo-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">DuckLing</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">17</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/DuckLing-IO"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/DuckLing-IO" target="_blank" title="Github"><i class="fab fa-github" style="color: #191717;"></i></a><a class="social-icon" href="mailto:2275628883@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #000000;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎访问我的博客！😄<br>如遇问题请与我联系！<br>email : 2275628883@qq.com</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#if-test-%E6%A0%87%E7%AD%BE"><span class="toc-number">2.</span> <span class="toc-text">if test 标签</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#WHERE-%E6%A0%87%E7%AD%BE"><span class="toc-number">3.</span> <span class="toc-text">WHERE 标签</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/" title="[MyBatis]动态SQL"><img src="/img/post_MyBatis.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="[MyBatis]动态SQL"/></a><div class="content"><a class="title" href="/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/" title="[MyBatis]动态SQL">[MyBatis]动态SQL</a><time datetime="2026-01-26T09:49:44.000Z" title="发表于 2026-01-26 17:49:44">2026-01-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/01/26/SpringBoot-PageHelper%E6%8F%92%E4%BB%B6/" title="[SpringBoot]PageHelper插件"><img src="/img/post_springboot_260124.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="[SpringBoot]PageHelper插件"/></a><div class="content"><a class="title" href="/2026/01/26/SpringBoot-PageHelper%E6%8F%92%E4%BB%B6/" title="[SpringBoot]PageHelper插件">[SpringBoot]PageHelper插件</a><time datetime="2026-01-26T07:13:14.000Z" title="发表于 2026-01-26 15:13:14">2026-01-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/01/25/STL%E9%80%9F%E6%9F%A5/" title="STL速查"><img src="/img/post_STL.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STL速查"/></a><div class="content"><a class="title" href="/2026/01/25/STL%E9%80%9F%E6%9F%A5/" title="STL速查">STL速查</a><time datetime="2026-01-25T13:51:00.000Z" title="发表于 2026-01-25 21:51:00">2026-01-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/01/25/%E7%AE%97%E6%B3%95-%E4%BA%8C%E5%88%86%E6%B3%95/" title="[算法]二分法"><img src="/img/post_daily_260125.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="[算法]二分法"/></a><div class="content"><a class="title" href="/2026/01/25/%E7%AE%97%E6%B3%95-%E4%BA%8C%E5%88%86%E6%B3%95/" title="[算法]二分法">[算法]二分法</a><time datetime="2026-01-25T10:02:30.000Z" title="发表于 2026-01-25 18:02:30">2026-01-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/01/24/SpringBoot-%E5%88%86%E5%B1%82%E8%A7%A3%E8%80%A6/" title="[SpringBoot]三层框架的分层解耦"><img src="/img/post_springboot_260124.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="[SpringBoot]三层框架的分层解耦"/></a><div class="content"><a class="title" href="/2026/01/24/SpringBoot-%E5%88%86%E5%B1%82%E8%A7%A3%E8%80%A6/" title="[SpringBoot]三层框架的分层解耦">[SpringBoot]三层框架的分层解耦</a><time datetime="2026-01-24T03:16:36.000Z" title="发表于 2026-01-24 11:16:36">2026-01-24</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/footer.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By DuckLing</span></div><div class="footer_custom_text">本站背景图片来源于 <a href="https://images.nasa.gov/" target="_blank" rel="noopener noreferrer">NASA Image and Video Library</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.3"></script><script src="/js/main.js?v=5.5.3"></script><script src="/true"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+
+  const getCount = () => {
+    const countELement = document.getElementById('twikoo-count')
+    if(!countELement) return
+    twikoo.getCommentsCount({
+      envId: 'https://duckling-io-blogcomment.hf.space',
+      region: '',
+      urls: [window.location.pathname],
+      includeReply: false
+    }).then(res => {
+      countELement.textContent = res[0].count
+    }).catch(err => {
+      console.error(err)
+    })
+  }
+
+  const init = (el = document, path = location.pathname) => {
+    twikoo.init({
+      el: el.querySelector('#twikoo-wrap'),
+      envId: 'https://duckling-io-blogcomment.hf.space',
+      region: '',
+      onCommentLoaded: () => {
+        btf.loadLightbox(document.querySelectorAll('#twikoo .tk-content img:not(.tk-owo-emotion)'))
+      },
+      ...option,
+      path: isShuoshuo ? path : (option && option.path) || path
+    })
+
+    GLOBAL_CONFIG_SITE.pageType === 'post' && getCount()
+
+    isShuoshuo && (window.shuoshuoComment.destroyTwikoo = () => {
+      if (el.children.length) {
+        el.innerHTML = ''
+        el.classList.add('no-comment')
+      }
+    })
+  }
+
+  const loadTwikoo = (el, path) => {
+    if (typeof twikoo === 'object') setTimeout(() => init(el, path), 0)
+    else btf.getScript('https://cdn.jsdelivr.net/npm/twikoo@1.6.44/dist/twikoo.all.min.js').then(() => init(el, path))
+  }
+
+  if (isShuoshuo) {
+    'Twikoo' === 'Twikoo'
+      ? window.shuoshuoComment = { loadComment: loadTwikoo }
+      : window.loadOtherComment = loadTwikoo
+    return
+  }
+
+  if ('Twikoo' === 'Twikoo' || !true) {
+    if (true) btf.loadComment(document.getElementById('twikoo-wrap'), loadTwikoo)
+    else loadTwikoo()
+  } else {
+    window.loadOtherComment = loadTwikoo
+  }
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
