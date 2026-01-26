@@ -28,11 +28,11 @@
             
             <tag> 实用资料 </tag>
             
+            <tag> 数据库 </tag>
+            
             <tag> 后端 </tag>
             
             <tag> MyBatis </tag>
-            
-            <tag> 数据库 </tag>
             
         </tags>
       
@@ -52,13 +52,13 @@
           
           <category> 后端 </category>
           
+          <category> SpringBoot </category>
+          
           <category> 资料 </category>
           
           <category> 学习笔记 </category>
           
           <category> 后端 </category>
-          
-          <category> SpringBoot </category>
           
           <category> SpringBoot </category>
           
@@ -73,9 +73,9 @@
             
             <tag> 实用资料 </tag>
             
-            <tag> 后端 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 后端 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -95,9 +95,9 @@
       
       <categories>
           
-          <category> 资料 </category>
-          
           <category> 算法 </category>
+          
+          <category> 资料 </category>
           
           <category> STL </category>
           
@@ -162,9 +162,9 @@
       
         <tags>
             
-            <tag> 后端 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 后端 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -225,9 +225,9 @@
       
       <categories>
           
-          <category> 学习笔记 </category>
-          
           <category> 算法 </category>
+          
+          <category> 学习笔记 </category>
           
           <category> 枚举 </category>
           
@@ -322,11 +322,11 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
+            
+            <tag> 数据库 </tag>
             
         </tags>
       
@@ -359,11 +359,11 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
+            
+            <tag> 数据库 </tag>
             
         </tags>
       
@@ -396,11 +396,11 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
+            
+            <tag> 数据库 </tag>
             
         </tags>
       
@@ -433,11 +433,11 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
+            
+            <tag> 数据库 </tag>
             
         </tags>
       
@@ -470,11 +470,11 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
+            
+            <tag> 数据库 </tag>
             
         </tags>
       
