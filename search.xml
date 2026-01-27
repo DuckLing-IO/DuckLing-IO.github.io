@@ -4,6 +4,51 @@
   
     
     <entry>
+      <title>[SpringBoot]注解@Options</title>
+      <link href="/2026/01/27/SpringBoot-%E6%B3%A8%E8%A7%A3-Options/"/>
+      <url>/2026/01/27/SpringBoot-%E6%B3%A8%E8%A7%A3-Options/</url>
+      
+        <content type="html"><![CDATA[<h1 id="常用功能"><a href="#常用功能" class="headerlink" title="常用功能"></a>常用功能</h1><h2 id="主键返回"><a href="#主键返回" class="headerlink" title="主键返回"></a>主键返回</h2><p>假设你的数据库里 <code>user</code> 表的主键 <code>id</code> 是 <strong>自增 (Auto Increment)</strong> 的。 当你执行一个 <code>insert</code> 操作时：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Insert(&quot;INSERT INTO user (username, password) VALUES (#&#123;username&#125;, #&#123;password&#125;)&quot;)</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">insert</span><span class="params">(User user)</span>;</span><br></pre></td></tr></table></figure><p><strong>默认情况</strong>：这个方法返回的 <code>int</code> 是 <strong>“受影响的行数”</strong>（成功插入 1 行，就返回 1）。 <strong>你的痛点</strong>：刚刚插入的那个用户，ID 到底是多少？Java 对象里的 <code>user.getId()</code> 此时还是 <code>null</code>。</p><h4 id="解决方案：使用-Options"><a href="#解决方案：使用-Options" class="headerlink" title="解决方案：使用 @Options"></a>解决方案：使用 <code>@Options</code></h4><p>你需要告诉 MyBatis：“插入完之后，帮我去数据库问问刚才生成的 ID 是多少，然后填回到我的 User 对象里。”</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. 插入语句</span></span><br><span class="line"><span class="meta">@Insert(&quot;INSERT INTO user (username, password) VALUES (#&#123;username&#125;, #&#123;password&#125;)&quot;)</span></span><br><span class="line"><span class="comment">// 2. 开启高级配置</span></span><br><span class="line"><span class="meta">@Options(useGeneratedKeys = true, keyProperty = &quot;id&quot;)</span> </span><br><span class="line"><span class="type">int</span> <span class="title function_">insert</span><span class="params">(User user)</span>;</span><br></pre></td></tr></table></figure><ul><li><strong><code>useGeneratedKeys = true</code></strong>：主键返回开关。将主键用 JDBC 的 <code>getGeneratedKeys</code> 方法取回来</li><li><strong><code>keyProperty = &quot;id&quot;</code></strong>：目标填空。将取回的主键返回到参数对象（User）的 <strong><code>id</code> 属性</strong>（Java 属性名）里</li></ul><p><strong>执行后的效果</strong>：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>(<span class="string">&quot;zhangsan&quot;</span>, <span class="string">&quot;123456&quot;</span>);</span><br><span class="line">System.out.println(user.getId()); <span class="comment">// 输出 null</span></span><br><span class="line"></span><br><span class="line">mapper.insert(user); <span class="comment">// 执行插入</span></span><br><span class="line"></span><br><span class="line">System.out.println(user.getId()); <span class="comment">// 输出 101 (MyBatis 已经悄悄把 ID 填进去了！)</span></span><br></pre></td></tr></table></figure><h1 id="其他用法"><a href="#其他用法" class="headerlink" title="其他用法"></a>其他用法</h1><ul><li><strong><code>flushCache</code></strong> (默认为 true):<ul><li><code>flushCache = Options.FlushCachePolicy.TRUE</code></li><li>意思是：只要执行这句 SQL，就清空本地缓存。通常用于 <code>Insert/Update/Delete</code>，防止查到脏数据。</li></ul></li><li><strong><code>timeout</code></strong>:<ul><li><code>timeout = 1000</code></li><li>意思是：如果这句 SQL 执行超过 1000 秒还没反应，就直接报错（抛出异常），别卡死程序。</li></ul></li></ul><h1 id="XML中配置"><a href="#XML中配置" class="headerlink" title="XML中配置"></a>XML中配置</h1><p><strong>XML 里的对应写法（等价于上面的注解）：</strong></p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">insert</span> <span class="attr">id</span>=<span class="string">&quot;insertUser&quot;</span> <span class="attr">useGeneratedKeys</span>=<span class="string">&quot;true&quot;</span> <span class="attr">keyProperty</span>=<span class="string">&quot;id&quot;</span>&gt;</span></span><br><span class="line">    INSERT INTO user (username, password) VALUES (#&#123;username&#125;, #&#123;password&#125;)</span><br><span class="line"><span class="tag">&lt;/<span class="name">insert</span>&gt;</span></span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> 后端 </category>
+          
+          <category> SpringBoot </category>
+          
+          <category> 资料 </category>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 后端 </category>
+          
+          <category> SpringBoot </category>
+          
+          <category> SpringBoot </category>
+          
+          <category> 注解 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实用资料 </tag>
+            
+            <tag> 学习笔记 </tag>
+            
+            <tag> 后端 </tag>
+            
+            <tag> SpringBoot </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>[SpringBoot]前端请求参数的接收方式</title>
       <link href="/2026/01/27/SpringBoot-%E5%89%8D%E7%AB%AF%E8%AF%B7%E6%B1%82%E5%8F%82%E6%95%B0%E7%9A%84%E6%8E%A5%E6%94%B6%E6%96%B9%E5%BC%8F/"/>
       <url>/2026/01/27/SpringBoot-%E5%89%8D%E7%AB%AF%E8%AF%B7%E6%B1%82%E5%8F%82%E6%95%B0%E7%9A%84%E6%8E%A5%E6%94%B6%E6%96%B9%E5%BC%8F/</url>
@@ -43,7 +88,7 @@
       <link href="/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/"/>
       <url>/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/</url>
       
-        <content type="html"><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><blockquote><p>动态SQL，指的就是随着用户的输入或外部的条件的变化而变化的SQL语句。</p></blockquote><p>比如说现在根据这个员工查询系统设计后端逻辑</p><img src="/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/image-20260126175645753.png" class="" title="员工查询系统"><p>前端会请求姓名 | 性别 | 入职开始日期 | 入职结束日期 但是不是每次请求都返回完完整整的四个参数</p><p>如果只根据姓名查询 或者只根据性别查询，则最普通的<code>WHERE ... AND ...</code>SQL语句查询不了这种情况</p><p>所以MyBatis提供了一中拼接and语句的SQL注入方式</p><p>该操作需要在定义在xml文件中的SQL语句进行修改</p><h1 id="if-test-标签"><a href="#if-test-标签" class="headerlink" title="if test 标签"></a>if test 标签</h1><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;判断条件&quot;</span>&gt;</span></span><br><span class="line">    待拼接语句</span><br><span class="line"><span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br></pre></td></tr></table></figure><p>当<code>test</code>后的判断条件成立时才会拼接包围的SQL语句</p><p>但是这样做仍有一个弊端 比如需要执行 <code>WHERE a = ? AND b = ?</code></p><p>当我a的判断条件不成立而b的判断条件成立时 只会进行b的拼接 就变成了&#96;&#96;WHERE AND b &#x3D; ?&#96;</p><p>这显然是语法错误了</p><p>所以需要引入<code>where</code>这个标签</p><h1 id="WHERE-标签"><a href="#WHERE-标签" class="headerlink" title="WHERE 标签"></a>WHERE 标签</h1><p>被<code>where</code>包围的所有<code>if test</code>标签会自动选择是否拼接<code>AND</code></p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--定义 Mapper 映射文件的约束和基本结构--&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">mapper</span></span></span><br><span class="line"><span class="meta">        <span class="keyword">PUBLIC</span> <span class="string">&quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;</span></span></span><br><span class="line"><span class="meta">        <span class="string">&quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">mapper</span> <span class="attr">namespace</span>=<span class="string">&quot;com.duckling.mapper.EmpMapper&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;list&quot;</span> <span class="attr">resultType</span>=<span class="string">&quot;com.duckling.pojo.Emp&quot;</span>&gt;</span></span><br><span class="line">        select e.*, d.name deptName from emp as e left join dept as d on e.dept_id = d.id</span><br><span class="line">        <span class="tag">&lt;<span class="name">where</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;name != null and name != &#x27;&#x27;&quot;</span>&gt;</span></span><br><span class="line">                e.name like concat(&#x27;%&#x27;,#&#123;name&#125;,&#x27;%&#x27;)</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;gender != null&quot;</span>&gt;</span></span><br><span class="line">                and e.gender = #&#123;gender&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;begin != null and end != null&quot;</span>&gt;</span></span><br><span class="line">                and e.entry_date between #&#123;begin&#125; and #&#123;end&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">where</span>&gt;</span></span><br><span class="line">        order by e.update_time desc</span><br><span class="line">    <span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">mapper</span>&gt;</span></span><br></pre></td></tr></table></figure><p>在这个<code>xml</code>文件中</p><p><code>where</code>标签包围了三个<code>if test</code>标签 但是当<code>name</code>不生效时，后边的某一个生效时会自动去掉<code>AND</code>使得SQL语法合法</p>]]></content>
+        <content type="html"><![CDATA[<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><blockquote><p>动态SQL，指的就是随着用户的输入或外部的条件的变化而变化的SQL语句。</p></blockquote><p>比如说现在根据这个员工查询系统设计后端逻辑</p><img src="/2026/01/26/MyBatis-%E5%8A%A8%E6%80%81SQL/image-20260126175645753.png" class="" title="员工查询系统"><p>前端会请求姓名 | 性别 | 入职开始日期 | 入职结束日期 但是不是每次请求都返回完完整整的四个参数</p><p>如果只根据姓名查询 或者只根据性别查询，则最普通的<code>WHERE ... AND ...</code>SQL语句查询不了这种情况</p><p>所以MyBatis提供了一中拼接and语句的SQL注入方式</p><p>该操作需要在定义在xml文件中的SQL语句进行修改</p><h1 id=""><a href="#" class="headerlink" title="&lt;if test&#x3D;”…”&gt;"></a>&lt;if test&#x3D;”…”&gt;</h1><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;判断条件&quot;</span>&gt;</span></span><br><span class="line">    待拼接语句</span><br><span class="line"><span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br></pre></td></tr></table></figure><p>当<code>test</code>后的判断条件成立时才会拼接包围的SQL语句</p><p>但是这样做仍有一个弊端 比如需要执行 <code>WHERE a = ? AND b = ?</code></p><p>当我a的判断条件不成立而b的判断条件成立时 只会进行b的拼接 就变成了&#96;&#96;WHERE AND b &#x3D; ?&#96;</p><p>这显然是语法错误了</p><p>所以需要引入<code>where</code>这个标签</p><h1 id="-1"><a href="#-1" class="headerlink" title="&lt;where&gt;"></a>&lt;where&gt;</h1><p>被<code>where</code>包围的所有<code>if test</code>标签会自动选择是否拼接<code>AND</code></p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--定义 Mapper 映射文件的约束和基本结构--&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">mapper</span></span></span><br><span class="line"><span class="meta">        <span class="keyword">PUBLIC</span> <span class="string">&quot;-//mybatis.org//DTD Mapper 3.0//EN&quot;</span></span></span><br><span class="line"><span class="meta">        <span class="string">&quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">mapper</span> <span class="attr">namespace</span>=<span class="string">&quot;com.duckling.mapper.EmpMapper&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;list&quot;</span> <span class="attr">resultType</span>=<span class="string">&quot;com.duckling.pojo.Emp&quot;</span>&gt;</span></span><br><span class="line">        select e.*, d.name deptName from emp as e left join dept as d on e.dept_id = d.id</span><br><span class="line">        <span class="tag">&lt;<span class="name">where</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;name != null and name != &#x27;&#x27;&quot;</span>&gt;</span></span><br><span class="line">                e.name like concat(&#x27;%&#x27;,#&#123;name&#125;,&#x27;%&#x27;)</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;gender != null&quot;</span>&gt;</span></span><br><span class="line">                and e.gender = #&#123;gender&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;begin != null and end != null&quot;</span>&gt;</span></span><br><span class="line">                and e.entry_date between #&#123;begin&#125; and #&#123;end&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">where</span>&gt;</span></span><br><span class="line">        order by e.update_time desc</span><br><span class="line">    <span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">mapper</span>&gt;</span></span><br></pre></td></tr></table></figure><p>在这个<code>xml</code>文件中</p><p><code>where</code>标签包围了三个<code>if test</code>标签 但是当<code>name</code>不生效时，后边的某一个生效时会自动去掉<code>AND</code>使得SQL语法合法</p><h1 id="-2"><a href="#-2" class="headerlink" title="&lt;foreach&gt;"></a>&lt;foreach&gt;</h1><p><strong>作用</strong>：遍历集合（List, Set, Array, Map），通常用于构建 <code>IN</code> 查询或批量插入。 </p><p><strong>场景</strong>：查询 ID 在某个列表里的所有用户 (<code>WHERE id IN (1, 2, 3)</code>)。</p><p><strong>关键属性</strong>：</p><ul><li><code>collection</code>: 参数类型 (list, array, 或 @Param 指定的名字)。</li><li><code>item</code>: 当前遍历到的元素变量名。</li><li><code>open</code>: 循环开始前的符号。</li><li><code>close</code>: 循环结束后的符号。</li><li><code>separator</code>: 每次循环之间的分隔符。</li></ul><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;findByIds&quot;</span> <span class="attr">resultType</span>=<span class="string">&quot;User&quot;</span>&gt;</span></span><br><span class="line">    SELECT * FROM user</span><br><span class="line">    WHERE id IN</span><br><span class="line">    <span class="tag">&lt;<span class="name">foreach</span> <span class="attr">collection</span>=<span class="string">&quot;ids&quot;</span> <span class="attr">item</span>=<span class="string">&quot;id&quot;</span> <span class="attr">open</span>=<span class="string">&quot;(&quot;</span> <span class="attr">close</span>=<span class="string">&quot;)&quot;</span> <span class="attr">separator</span>=<span class="string">&quot;,&quot;</span>&gt;</span></span><br><span class="line">        #&#123;id&#125;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">foreach</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure><h1 id="-3"><a href="#-3" class="headerlink" title="&lt;set&gt;"></a>&lt;set&gt;</h1><p><strong>作用</strong>：</p><ol><li>自动插入 <code>SET</code> 关键字。</li><li><strong>智能去除</strong>内容末尾多余的逗号 <code>,</code>。 <strong>场景</strong>：更新操作。只更新传入了值的字段，没传值的字段保持原样。</li></ol><p>XML</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&lt;update id=&quot;updateUser&quot;&gt;</span><br><span class="line">    UPDATE user</span><br><span class="line">    &lt;set&gt;</span><br><span class="line">        &lt;if test=&quot;userName != null&quot;&gt; user_name = #&#123;userName&#125;, &lt;/if&gt;</span><br><span class="line">        &lt;if test=&quot;password != null&quot;&gt; password = #&#123;password&#125;, &lt;/if&gt;</span><br><span class="line">        &lt;if test=&quot;email != null&quot;&gt; email = #&#123;email&#125;, &lt;/if&gt;</span><br><span class="line">    &lt;/set&gt;</span><br><span class="line">    WHERE id = #&#123;id&#125;</span><br><span class="line">&lt;/update&gt;</span><br></pre></td></tr></table></figure><p><em>注意：如果所有 if 都不成立，<code>&lt;set&gt;</code> 标签内为空，SQL 会报错。业务层需保证至少更新一个字段。</em></p><h1 id="-4"><a href="#-4" class="headerlink" title="&lt;choose&gt;, &lt;when&gt;, &lt;otherwise&gt;"></a>&lt;choose&gt;, &lt;when&gt;, &lt;otherwise&gt;</h1><p><strong>作用</strong>：类似于 Java 的 <code>switch...case...default</code>。只会执行<strong>其中一个</strong>分支。 <strong>场景</strong>：优先按 ID 查，没 ID 按名字查，都没传就查全部活跃用户。</p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">select</span> <span class="attr">id</span>=<span class="string">&quot;selectUserByChoice&quot;</span> <span class="attr">resultType</span>=<span class="string">&quot;User&quot;</span>&gt;</span></span><br><span class="line">    SELECT * FROM user</span><br><span class="line">    <span class="tag">&lt;<span class="name">where</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">choose</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">when</span> <span class="attr">test</span>=<span class="string">&quot;id != null&quot;</span>&gt;</span></span><br><span class="line">                AND id = #&#123;id&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">when</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">when</span> <span class="attr">test</span>=<span class="string">&quot;userName != null&quot;</span>&gt;</span></span><br><span class="line">                AND user_name = #&#123;userName&#125;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">when</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">otherwise</span>&gt;</span></span><br><span class="line">                AND state = &#x27;ACTIVE&#x27;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">otherwise</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">choose</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">where</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">select</span>&gt;</span></span><br></pre></td></tr></table></figure><h1 id="-5"><a href="#-5" class="headerlink" title="&lt;trim&gt;"></a>&lt;trim&gt;</h1><p><code>&lt;trim&gt;</code> 标签是所有动态 SQL 标签的<strong>底层父类</strong>（<code>&lt;where&gt;</code> 和 <code>&lt;set&gt;</code> 其实就是 <code>&lt;trim&gt;</code> 的预设模式）。</p><p><strong>作用</strong>：自定义前缀、后缀以及要被覆盖（去掉）的字符。</p><p><strong>场景</strong>：非常规的 SQL 拼接，或者你需要去掉后缀的 <code>AND</code> 而不是前缀。</p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">trim</span> <span class="attr">prefix</span>=<span class="string">&quot;SET&quot;</span> <span class="attr">suffixOverrides</span>=<span class="string">&quot;,&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;name != null&quot;</span>&gt;</span>name = #&#123;name&#125;,<span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">trim</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">trim</span> <span class="attr">prefix</span>=<span class="string">&quot;WHERE&quot;</span> <span class="attr">prefixOverrides</span>=<span class="string">&quot;AND |OR &quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">if</span> <span class="attr">test</span>=<span class="string">&quot;name != null&quot;</span>&gt;</span>AND name = #&#123;name&#125;<span class="tag">&lt;/<span class="name">if</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">trim</span>&gt;</span></span><br></pre></td></tr></table></figure><h3 id="属性表"><a href="#属性表" class="headerlink" title="属性表"></a>属性表</h3><table><thead><tr><th><strong>属性名</strong></th><th><strong>作用方向</strong></th><th><strong>含义</strong></th><th><strong>典型值</strong></th></tr></thead><tbody><tr><td><strong><code>prefix</code></strong></td><td><strong>加</strong>在开头</td><td>如果标签内有内容，就在<strong>最前面</strong>补上这个字符串</td><td><code>WHERE</code>, <code>SET</code>, <code>(</code></td></tr><tr><td><strong><code>suffix</code></strong></td><td><strong>加</strong>在结尾</td><td>如果标签内有内容，就在<strong>最后面</strong>补上这个字符串</td><td><code>)</code>, <code>END</code></td></tr><tr><td><strong><code>prefixOverrides</code></strong></td><td><strong>删</strong>掉开头</td><td>如果标签内的内容以这些字符<strong>开头</strong>，就把它删掉</td><td><code>AND</code>, <code>OR</code></td></tr><tr><td><strong><code>suffixOverrides</code></strong></td><td><strong>删</strong>掉结尾</td><td>如果标签内的内容以这些字符<strong>结尾</strong>，就把它删掉</td><td><code>,</code></td></tr></tbody></table><h3 id="2-逻辑执行流程"><a href="#2-逻辑执行流程" class="headerlink" title="2. 逻辑执行流程"></a>2. 逻辑执行流程</h3><p>MyBatis 处理 <code>&lt;trim&gt;</code> 的顺序是这样的：</p><ol><li><strong>先生成内部 SQL</strong>：先把 <code>&lt;trim&gt;</code> 标签里面的 <code>&lt;if&gt;</code> 跑一遍，拼出一个原始字符串。</li><li><strong>判断空</strong>：如果拼出来的字符串是空的，<code>&lt;trim&gt;</code> 啥也不干，直接消失。</li><li><strong>去多余（Overrides）</strong>：如果字符串不为空，检查开头有没有命中 <code>prefixOverrides</code>，结尾有没有命中 <code>suffixOverrides</code>，有则<strong>删掉</strong>。</li><li><strong>补前缀后缀（Prefix&#x2F;Suffix）</strong>：删干净后，再在最前加 <code>prefix</code>，最后加 <code>suffix</code>。</li></ol><hr><h3 id="3-实战演示"><a href="#3-实战演示" class="headerlink" title="3. 实战演示"></a>3. 实战演示</h3><h4 id="场景一：手写一个-标签"><a href="#场景一：手写一个-标签" class="headerlink" title="场景一：手写一个 &lt;where&gt; 标签"></a>场景一：手写一个 <code>&lt;where&gt;</code> 标签</h4><p>如果不使用 <code>&lt;where&gt;</code> 标签，用 <code>&lt;trim&gt;</code> 实现完全一样的功能：</p><p>XML</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;trim prefix=&quot;WHERE&quot; prefixOverrides=&quot;AND |OR &quot;&gt;</span><br><span class="line">    &lt;if test=&quot;state != null&quot;&gt;</span><br><span class="line">        AND state = #&#123;state&#125;</span><br><span class="line">    &lt;/if&gt; </span><br><span class="line">    &lt;if test=&quot;title != null&quot;&gt;</span><br><span class="line">        AND title like #&#123;title&#125;</span><br><span class="line">    &lt;/if&gt;</span><br><span class="line">&lt;/trim&gt;</span><br></pre></td></tr></table></figure><ul><li><strong>假设 <code>state</code> 有值</strong>：内部生成 <code>AND state = 1</code>。</li><li><strong><code>prefixOverrides</code> 工作</strong>：发现开头是 <code>AND</code>，删掉！变成 <code>state = 1</code>。</li><li><strong><code>prefix</code> 工作</strong>：在前面加上 <code>WHERE</code>。</li><li><strong>最终结果</strong>：<code>WHERE state = 1</code>。</li><li><em>注意：<code>prefixOverrides</code> 如果有多个，用管道符 <code>|</code> 隔开，注意空格（如 <code>AND |OR</code>）。</em></li></ul>]]></content>
       
       
       <categories>
@@ -61,13 +106,13 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 实用资料 </tag>
             
             <tag> 后端 </tag>
             
             <tag> MyBatis </tag>
+            
+            <tag> 数据库 </tag>
             
         </tags>
       
@@ -89,9 +134,9 @@
           
           <category> SpringBoot </category>
           
-          <category> 学习笔记 </category>
-          
           <category> 资料 </category>
+          
+          <category> 学习笔记 </category>
           
           <category> 后端 </category>
           
@@ -106,9 +151,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 实用资料 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> 后端 </tag>
             
@@ -223,13 +268,13 @@
           
           <category> HTTP协议 </category>
           
-          <category> 学习笔记 </category>
-          
           <category> 资料 </category>
           
-          <category> 后端 </category>
+          <category> 学习笔记 </category>
           
           <category> HTTP </category>
+          
+          <category> 后端 </category>
           
           <category> HTTP协议 </category>
           
@@ -307,9 +352,9 @@
           
           <category> 前端 </category>
           
-          <category> 学习笔记 </category>
-          
           <category> JavaScript </category>
+          
+          <category> 学习笔记 </category>
           
           <category> 前端 </category>
           
@@ -359,9 +404,9 @@
             
             <tag> 学习笔记 </tag>
             
-            <tag> MySQL </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> MySQL </tag>
             
         </tags>
       
@@ -396,9 +441,9 @@
             
             <tag> 学习笔记 </tag>
             
-            <tag> MySQL </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> MySQL </tag>
             
         </tags>
       
@@ -433,9 +478,9 @@
             
             <tag> 学习笔记 </tag>
             
-            <tag> MySQL </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> MySQL </tag>
             
         </tags>
       
@@ -470,9 +515,9 @@
             
             <tag> 学习笔记 </tag>
             
-            <tag> MySQL </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> MySQL </tag>
             
         </tags>
       
@@ -507,9 +552,9 @@
             
             <tag> 学习笔记 </tag>
             
-            <tag> MySQL </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> MySQL </tag>
             
         </tags>
       
