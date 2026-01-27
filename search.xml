@@ -4,24 +4,24 @@
   
     
     <entry>
-      <title>[SpringBoot]注解@Options</title>
-      <link href="/2026/01/27/SpringBoot-%E6%B3%A8%E8%A7%A3-Options/"/>
-      <url>/2026/01/27/SpringBoot-%E6%B3%A8%E8%A7%A3-Options/</url>
+      <title>[SpringBoot]注解@Transactional</title>
+      <link href="/2026/01/27/SpringBoot-%E6%B3%A8%E8%A7%A3-Transactional/"/>
+      <url>/2026/01/27/SpringBoot-%E6%B3%A8%E8%A7%A3-Transactional/</url>
       
-        <content type="html"><![CDATA[<h1 id="常用功能"><a href="#常用功能" class="headerlink" title="常用功能"></a>常用功能</h1><h2 id="主键返回"><a href="#主键返回" class="headerlink" title="主键返回"></a>主键返回</h2><p>假设你的数据库里 <code>user</code> 表的主键 <code>id</code> 是 <strong>自增 (Auto Increment)</strong> 的。 当你执行一个 <code>insert</code> 操作时：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Insert(&quot;INSERT INTO user (username, password) VALUES (#&#123;username&#125;, #&#123;password&#125;)&quot;)</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">insert</span><span class="params">(User user)</span>;</span><br></pre></td></tr></table></figure><p><strong>默认情况</strong>：这个方法返回的 <code>int</code> 是 <strong>“受影响的行数”</strong>（成功插入 1 行，就返回 1）。 <strong>你的痛点</strong>：刚刚插入的那个用户，ID 到底是多少？Java 对象里的 <code>user.getId()</code> 此时还是 <code>null</code>。</p><h4 id="解决方案：使用-Options"><a href="#解决方案：使用-Options" class="headerlink" title="解决方案：使用 @Options"></a>解决方案：使用 <code>@Options</code></h4><p>你需要告诉 MyBatis：“插入完之后，帮我去数据库问问刚才生成的 ID 是多少，然后填回到我的 User 对象里。”</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. 插入语句</span></span><br><span class="line"><span class="meta">@Insert(&quot;INSERT INTO user (username, password) VALUES (#&#123;username&#125;, #&#123;password&#125;)&quot;)</span></span><br><span class="line"><span class="comment">// 2. 开启高级配置</span></span><br><span class="line"><span class="meta">@Options(useGeneratedKeys = true, keyProperty = &quot;id&quot;)</span> </span><br><span class="line"><span class="type">int</span> <span class="title function_">insert</span><span class="params">(User user)</span>;</span><br></pre></td></tr></table></figure><ul><li><strong><code>useGeneratedKeys = true</code></strong>：主键返回开关。将主键用 JDBC 的 <code>getGeneratedKeys</code> 方法取回来</li><li><strong><code>keyProperty = &quot;id&quot;</code></strong>：目标填空。将取回的主键返回到参数对象（User）的 <strong><code>id</code> 属性</strong>（Java 属性名）里</li></ul><p><strong>执行后的效果</strong>：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>(<span class="string">&quot;zhangsan&quot;</span>, <span class="string">&quot;123456&quot;</span>);</span><br><span class="line">System.out.println(user.getId()); <span class="comment">// 输出 null</span></span><br><span class="line"></span><br><span class="line">mapper.insert(user); <span class="comment">// 执行插入</span></span><br><span class="line"></span><br><span class="line">System.out.println(user.getId()); <span class="comment">// 输出 101 (MyBatis 已经悄悄把 ID 填进去了！)</span></span><br></pre></td></tr></table></figure><h1 id="其他用法"><a href="#其他用法" class="headerlink" title="其他用法"></a>其他用法</h1><ul><li><strong><code>flushCache</code></strong> (默认为 true):<ul><li><code>flushCache = Options.FlushCachePolicy.TRUE</code></li><li>意思是：只要执行这句 SQL，就清空本地缓存。通常用于 <code>Insert/Update/Delete</code>，防止查到脏数据。</li></ul></li><li><strong><code>timeout</code></strong>:<ul><li><code>timeout = 1000</code></li><li>意思是：如果这句 SQL 执行超过 1000 秒还没反应，就直接报错（抛出异常），别卡死程序。</li></ul></li></ul><h1 id="XML中配置"><a href="#XML中配置" class="headerlink" title="XML中配置"></a>XML中配置</h1><p><strong>XML 里的对应写法（等价于上面的注解）：</strong></p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">insert</span> <span class="attr">id</span>=<span class="string">&quot;insertUser&quot;</span> <span class="attr">useGeneratedKeys</span>=<span class="string">&quot;true&quot;</span> <span class="attr">keyProperty</span>=<span class="string">&quot;id&quot;</span>&gt;</span></span><br><span class="line">    INSERT INTO user (username, password) VALUES (#&#123;username&#125;, #&#123;password&#125;)</span><br><span class="line"><span class="tag">&lt;/<span class="name">insert</span>&gt;</span></span><br></pre></td></tr></table></figure>]]></content>
+        <content type="html"><![CDATA[<h2 id="一、-工作原理"><a href="#一、-工作原理" class="headerlink" title="一、 工作原理"></a>一、 工作原理</h2><p><code>@Transactional</code> 的本质是基于 <strong>Spring AOP</strong> 实现的。当 Spring 容器启动时，它会扫描标注了该注解的类或方法，并为这些 Bean 生成一个 <strong>代理对象（Proxy）</strong>。</p><h3 id="执行流程"><a href="#执行流程" class="headerlink" title="执行流程"></a>执行流程</h3><p>当调用方请求一个被 <code>@Transactional</code> 修饰的方法时，实际上是在调用代理对象。执行顺序如下：</p><ol><li><strong>拦截请求</strong>：代理对象拦截对目标方法的调用。</li><li><strong>开启事务</strong>：代理对象向事务管理器（Transaction Manager）申请，通过数据库连接设置 <code>conn.setAutoCommit(false)</code>。</li><li><strong>执行业务</strong>：执行目标类中的实际业务方法。</li><li><strong>结果处理</strong>：<ul><li><strong>Commit</strong>：如果方法正常返回，代理对象执行事务提交。</li><li><strong>Rollback</strong>：如果方法抛出特定异常，代理对象执行事务回滚。</li></ul></li><li><strong>资源清理</strong>：关闭数据库连接或将其归还连接池。</li></ol><blockquote><p><strong>核心提示</strong>：理解“代理对象”是理解事务机制的关键。如果调用没有经过代理对象，事务逻辑就不会执行。</p></blockquote><h2 id="二、-核心属性详解"><a href="#二、-核心属性详解" class="headerlink" title="二、 核心属性详解"></a>二、 核心属性详解</h2><p>虽然 <code>@Transactional</code> 开箱即用，但在生产环境中，我们必须关注以下两个关键参数以确保数据一致性。</p><h3 id="1-rollbackFor（回滚规则）"><a href="#1-rollbackFor（回滚规则）" class="headerlink" title="1. rollbackFor（回滚规则）"></a>1. rollbackFor（回滚规则）</h3><p>这是最容易被忽视的属性。</p><ul><li><strong>默认行为</strong>：Spring 默认仅在抛出 <code>RuntimeException</code>（运行时异常）或 <code>Error</code> 时回滚。对于 <code>Checked Exception</code>（受检异常，如 <code>IOException</code>、<code>SQLException</code>），<strong>默认不回滚</strong>。</li><li><strong>最佳实践</strong>：务必显式指定回滚异常类型，确保所有异常均能触发回滚。</li></ul><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// 推荐写法：覆盖所有异常情况</span><br><span class="line">@Transactional(rollbackFor = Exception.class)</span><br><span class="line">public void createUser() throws Exception &#123;</span><br><span class="line">    // 业务逻辑</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h3 id="2-propagation（传播行为）"><a href="#2-propagation（传播行为）" class="headerlink" title="2. propagation（传播行为）"></a>2. propagation（传播行为）</h3><p>该属性定义了当事务方法被另一个事务方法调用时，事务该如何传播。Spring 共支持 <strong>7 种</strong> 传播行为：</p><table><thead><tr><th>属性值</th><th>行为描述</th><th>适用场景</th></tr></thead><tbody><tr><td><strong>REQUIRED</strong> (默认)</td><td>如果当前存在事务，则加入该事务；如果当前无事务，则新建一个事务。</td><td>绝大多数增删改业务场景</td></tr><tr><td><strong>REQUIRES_NEW</strong></td><td>无论当前是否存在事务，都挂起当前事务，开启一个<strong>独立</strong>的新事务。</td><td>记录日志、审计流水（即使主业务失败，日志也必须入库）</td></tr><tr><td><strong>NESTED</strong></td><td>如果当前存在事务，则在嵌套事务内执行（基于 JDBC SavePoint）；如果无事务，行为同 REQUIRED。</td><td>复杂的子模块回滚需求（主事务回滚会回滚子事务，但子事务回滚不影响主事务）</td></tr><tr><td><strong>SUPPORTS</strong></td><td>如果当前存在事务，则加入该事务；如果当前没有事务，则以<strong>非事务</strong>方式执行。</td><td>纯查询操作（适合“能有最好，没有也行”的场景）</td></tr><tr><td><strong>NOT_SUPPORTED</strong></td><td>以<strong>非事务</strong>方式执行操作，如果当前存在事务，就把当前事务挂起。</td><td>发送邮件、短信等不涉及数据库的耗时操作，避免占用数据库连接</td></tr><tr><td><strong>MANDATORY</strong></td><td>如果当前存在事务，则加入该事务；如果当前没有事务，则<strong>抛出异常</strong>。</td><td>必须在已有事务上下文中执行的方法</td></tr><tr><td><strong>NEVER</strong></td><td>以<strong>非事务</strong>方式执行，如果当前存在事务，则<strong>抛出异常</strong>。</td><td>严禁在事务中执行的操作</td></tr></tbody></table><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><code>@Transactional</code> 是一个强大的工具。深入理解其背后的 <strong>AOP 代理机制</strong>，并正确配置 <strong>回滚规则 (rollbackFor)</strong> 和 <strong>传播行为 (propagation)</strong>，是确保后端业务数据一致性的基础。</p>]]></content>
       
       
       <categories>
           
           <category> 后端 </category>
           
-          <category> SpringBoot </category>
-          
           <category> 资料 </category>
           
           <category> 学习笔记 </category>
           
           <category> 后端 </category>
+          
+          <category> SpringBoot </category>
           
           <category> SpringBoot </category>
           
@@ -36,9 +36,54 @@
             
             <tag> 实用资料 </tag>
             
+            <tag> 后端 </tag>
+            
             <tag> 学习笔记 </tag>
             
+            <tag> SpringBoot </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>[SpringBoot]注解@Options</title>
+      <link href="/2026/01/27/SpringBoot-%E6%B3%A8%E8%A7%A3-Options/"/>
+      <url>/2026/01/27/SpringBoot-%E6%B3%A8%E8%A7%A3-Options/</url>
+      
+        <content type="html"><![CDATA[<h1 id="常用功能"><a href="#常用功能" class="headerlink" title="常用功能"></a>常用功能</h1><h2 id="主键返回"><a href="#主键返回" class="headerlink" title="主键返回"></a>主键返回</h2><p>假设你的数据库里 <code>user</code> 表的主键 <code>id</code> 是 <strong>自增 (Auto Increment)</strong> 的。 当你执行一个 <code>insert</code> 操作时：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Insert(&quot;INSERT INTO user (username, password) VALUES (#&#123;username&#125;, #&#123;password&#125;)&quot;)</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">insert</span><span class="params">(User user)</span>;</span><br></pre></td></tr></table></figure><p><strong>默认情况</strong>：这个方法返回的 <code>int</code> 是 <strong>“受影响的行数”</strong>（成功插入 1 行，就返回 1）。 <strong>你的痛点</strong>：刚刚插入的那个用户，ID 到底是多少？Java 对象里的 <code>user.getId()</code> 此时还是 <code>null</code>。</p><h4 id="解决方案：使用-Options"><a href="#解决方案：使用-Options" class="headerlink" title="解决方案：使用 @Options"></a>解决方案：使用 <code>@Options</code></h4><p>你需要告诉 MyBatis：“插入完之后，帮我去数据库问问刚才生成的 ID 是多少，然后填回到我的 User 对象里。”</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. 插入语句</span></span><br><span class="line"><span class="meta">@Insert(&quot;INSERT INTO user (username, password) VALUES (#&#123;username&#125;, #&#123;password&#125;)&quot;)</span></span><br><span class="line"><span class="comment">// 2. 开启高级配置</span></span><br><span class="line"><span class="meta">@Options(useGeneratedKeys = true, keyProperty = &quot;id&quot;)</span> </span><br><span class="line"><span class="type">int</span> <span class="title function_">insert</span><span class="params">(User user)</span>;</span><br></pre></td></tr></table></figure><ul><li><strong><code>useGeneratedKeys = true</code></strong>：主键返回开关。将主键用 JDBC 的 <code>getGeneratedKeys</code> 方法取回来</li><li><strong><code>keyProperty = &quot;id&quot;</code></strong>：目标填空。将取回的主键返回到参数对象（User）的 <strong><code>id</code> 属性</strong>（Java 属性名）里</li></ul><p><strong>执行后的效果</strong>：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>(<span class="string">&quot;zhangsan&quot;</span>, <span class="string">&quot;123456&quot;</span>);</span><br><span class="line">System.out.println(user.getId()); <span class="comment">// 输出 null</span></span><br><span class="line"></span><br><span class="line">mapper.insert(user); <span class="comment">// 执行插入</span></span><br><span class="line"></span><br><span class="line">System.out.println(user.getId()); <span class="comment">// 输出 101 (MyBatis 已经悄悄把 ID 填进去了！)</span></span><br></pre></td></tr></table></figure><h1 id="其他用法"><a href="#其他用法" class="headerlink" title="其他用法"></a>其他用法</h1><ul><li><strong><code>flushCache</code></strong> (默认为 true):<ul><li><code>flushCache = Options.FlushCachePolicy.TRUE</code></li><li>意思是：只要执行这句 SQL，就清空本地缓存。通常用于 <code>Insert/Update/Delete</code>，防止查到脏数据。</li></ul></li><li><strong><code>timeout</code></strong>:<ul><li><code>timeout = 1000</code></li><li>意思是：如果这句 SQL 执行超过 1000 秒还没反应，就直接报错（抛出异常），别卡死程序。</li></ul></li></ul><h1 id="XML中配置"><a href="#XML中配置" class="headerlink" title="XML中配置"></a>XML中配置</h1><p><strong>XML 里的对应写法（等价于上面的注解）：</strong></p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">insert</span> <span class="attr">id</span>=<span class="string">&quot;insertUser&quot;</span> <span class="attr">useGeneratedKeys</span>=<span class="string">&quot;true&quot;</span> <span class="attr">keyProperty</span>=<span class="string">&quot;id&quot;</span>&gt;</span></span><br><span class="line">    INSERT INTO user (username, password) VALUES (#&#123;username&#125;, #&#123;password&#125;)</span><br><span class="line"><span class="tag">&lt;/<span class="name">insert</span>&gt;</span></span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> 后端 </category>
+          
+          <category> 资料 </category>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 后端 </category>
+          
+          <category> SpringBoot </category>
+          
+          <category> SpringBoot </category>
+          
+          <category> SpringBoot </category>
+          
+          <category> 注解 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 实用资料 </tag>
+            
             <tag> 后端 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -95,9 +140,9 @@
           
           <category> 后端 </category>
           
-          <category> MyBatis </category>
-          
           <category> 资料 </category>
+          
+          <category> MyBatis </category>
           
           <category> MyBatis </category>
           
@@ -132,8 +177,6 @@
           
           <category> 后端 </category>
           
-          <category> SpringBoot </category>
-          
           <category> 资料 </category>
           
           <category> 学习笔记 </category>
@@ -144,7 +187,9 @@
           
           <category> SpringBoot </category>
           
-          <category> PageHelper </category>
+          <category> SpringBoot </category>
+          
+          <category> 插件 </category>
           
       </categories>
       
@@ -153,9 +198,9 @@
             
             <tag> 实用资料 </tag>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 后端 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -175,9 +220,9 @@
       
       <categories>
           
-          <category> 算法 </category>
-          
           <category> 资料 </category>
+          
+          <category> 算法 </category>
           
           <category> STL </category>
           
@@ -242,9 +287,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 后端 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -270,9 +315,9 @@
           
           <category> 资料 </category>
           
-          <category> 学习笔记 </category>
-          
           <category> HTTP </category>
+          
+          <category> 学习笔记 </category>
           
           <category> 后端 </category>
           
@@ -305,9 +350,9 @@
       
       <categories>
           
-          <category> 算法 </category>
-          
           <category> 学习笔记 </category>
+          
+          <category> 算法 </category>
           
           <category> 枚举 </category>
           
@@ -350,11 +395,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 前端 </category>
           
           <category> JavaScript </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 前端 </category>
           
@@ -387,11 +432,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 数据库 </category>
           
           <category> MySQL </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 数据库 </category>
           
@@ -402,9 +447,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
             
@@ -424,11 +469,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 数据库 </category>
           
           <category> MySQL </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 数据库 </category>
           
@@ -439,9 +484,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
             
@@ -461,11 +506,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 数据库 </category>
           
           <category> MySQL </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 数据库 </category>
           
@@ -476,9 +521,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
             
@@ -498,11 +543,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 数据库 </category>
           
           <category> MySQL </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 数据库 </category>
           
@@ -513,9 +558,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
             
@@ -535,11 +580,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 数据库 </category>
           
           <category> MySQL </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 数据库 </category>
           
@@ -550,9 +595,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
             
