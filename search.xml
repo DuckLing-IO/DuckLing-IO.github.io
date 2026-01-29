@@ -17,9 +17,9 @@
           
           <category> SpringBoot </category>
           
-          <category> 资料 </category>
-          
           <category> 学习笔记 </category>
+          
+          <category> 资料 </category>
           
           <category> 后端 </category>
           
@@ -34,11 +34,11 @@
       
         <tags>
             
+            <tag> 学习笔记 </tag>
+            
             <tag> 实用资料 </tag>
             
             <tag> 后端 </tag>
-            
-            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -62,9 +62,9 @@
           
           <category> SpringBoot </category>
           
-          <category> 资料 </category>
-          
           <category> 学习笔记 </category>
+          
+          <category> 资料 </category>
           
           <category> 后端 </category>
           
@@ -79,11 +79,11 @@
       
         <tags>
             
+            <tag> 学习笔记 </tag>
+            
             <tag> 实用资料 </tag>
             
             <tag> 后端 </tag>
-            
-            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -179,9 +179,9 @@
           
           <category> SpringBoot </category>
           
-          <category> 资料 </category>
-          
           <category> 学习笔记 </category>
+          
+          <category> 资料 </category>
           
           <category> 后端 </category>
           
@@ -196,11 +196,11 @@
       
         <tags>
             
+            <tag> 学习笔记 </tag>
+            
             <tag> 实用资料 </tag>
             
             <tag> 后端 </tag>
-            
-            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -287,9 +287,9 @@
       
         <tags>
             
-            <tag> 后端 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 后端 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -313,13 +313,13 @@
           
           <category> HTTP协议 </category>
           
-          <category> 资料 </category>
-          
           <category> 学习笔记 </category>
           
-          <category> HTTP </category>
+          <category> 资料 </category>
           
           <category> 后端 </category>
+          
+          <category> HTTP </category>
           
           <category> HTTP协议 </category>
           
@@ -447,9 +447,9 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 数据库 </tag>
             
             <tag> MySQL </tag>
             
@@ -484,9 +484,9 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 数据库 </tag>
             
             <tag> MySQL </tag>
             
@@ -521,9 +521,9 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 数据库 </tag>
             
             <tag> MySQL </tag>
             
@@ -558,9 +558,9 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 数据库 </tag>
             
             <tag> MySQL </tag>
             
@@ -595,9 +595,9 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 数据库 </tag>
             
             <tag> MySQL </tag>
             
