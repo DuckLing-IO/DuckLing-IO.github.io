@@ -4,6 +4,37 @@
   
     
     <entry>
+      <title>[SpringBoot]学习杂记260128</title>
+      <link href="/2026/01/29/SpringBoot-%E5%AD%A6%E4%B9%A0%E6%9D%82%E8%AE%B0260128/"/>
+      <url>/2026/01/29/SpringBoot-%E5%AD%A6%E4%B9%A0%E6%9D%82%E8%AE%B0260128/</url>
+      
+        <content type="html"><![CDATA[<p>在 XML 文件中，<strong><code>&lt;</code></strong> （小于号）和 <strong><code>&gt;</code></strong> （大于号）是<strong>保留字符</strong>，用于定义标签（比如 <code>&lt;select&gt;</code>、<code>&lt;if&gt;</code>）。</p><p>当 XML 解析器读到 <code>WHEN CURDATE() &lt; begin_date</code> 中的 <code>&lt;</code> 时，它以为你要开始写一个新的标签，结果后面跟的是空格和 <code>begin_date</code>，它就懵了，所以报语法错误。</p><hr><h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><p>你有两种修改方式，<strong>推荐使用第一种</strong>。</p><h4 id="方法一：使用转义字符（推荐）"><a href="#方法一：使用转义字符（推荐）" class="headerlink" title="方法一：使用转义字符（推荐）"></a>方法一：使用转义字符（推荐）</h4><p>把 SQL 中的特殊符号替换成 XML 能识别的转义符。</p><table><thead><tr><th><strong>原符号</strong></th><th><strong>含义</strong></th><th><strong>XML 转义写法</strong></th><th><strong>记忆口诀</strong></th></tr></thead><tbody><tr><td><strong><code>&lt;</code></strong></td><td>小于</td><td><strong><code>&lt;</code></strong></td><td><strong>l</strong>ess <strong>t</strong>han</td></tr><tr><td><strong><code>&gt;</code></strong></td><td>大于</td><td><strong>&gt;</strong></td><td><strong>g</strong>reater <strong>t</strong>han</td></tr><tr><td><code>&amp;</code></td><td>和</td><td><code>&amp;</code></td><td>ampersand</td></tr></tbody></table><img src="/2026/01/29/SpringBoot-%E5%AD%A6%E4%B9%A0%E6%9D%82%E8%AE%B0260128/image-20260128160304371.png" class="" title="示例"><p>为什么这个时候识别不出来实体类的名字？开着驼峰命名呢</p><p>这是一个非常经典的误解。</p><p><strong>核心结论：</strong> <strong>“驼峰命名映射”（<code>map-underscore-to-camel-case</code>）只对“查询（Select）”的结果封装生效，对“插入&#x2F;更新（Insert&#x2F;Update）”的参数传递完全无效！</strong></p><p>你之所以报错或者识别不出来，是因为你在 SQL 的 <code>#&#123;&#125;</code> 占位符里写了<strong>数据库的列名</strong>（下划线），而 MyBatis 在这里要的是<strong>Java 类的属性名</strong>（驼峰）。</p><p>MyBatis 解析到 <code>#&#123;master_id&#125;</code> 时，它会去你的 <code>Clazz</code> 实体类里找 <code>getMaster_id()</code> 方法。</p><p>但是你的实体类遵循驼峰命名，只有 <code>getMasterId()</code> 方法。</p><p><strong>结果：</strong> 找不到 Getter 方法，报错 <code>ReflectionException: There is no getter for property named &#39;master_id&#39;...</code>。</p><h3 id="3-深度原理解析"><a href="#3-深度原理解析" class="headerlink" title="3. 深度原理解析"></a>3. 深度原理解析</h3><p>为了让你彻底记住，请看这个对比：</p><h4 id="A-查数据-SELECT-驼峰配置生效"><a href="#A-查数据-SELECT-驼峰配置生效" class="headerlink" title="A. 查数据 (SELECT) -&gt; 驼峰配置生效"></a>A. 查数据 (<code>SELECT</code>) -&gt; 驼峰配置生效</h4><ul><li><strong>方向：</strong> 数据库 $\to$ Java</li><li><strong>配置作用：</strong> 当数据库返回列 <code>master_id</code> 时，MyBatis 看到配置文件开启了驼峰，会自动把它转换成 <code>masterId</code> 去匹配你的 Java 类。</li></ul><h4 id="B-存数据-INSERT-驼峰配置不生效"><a href="#B-存数据-INSERT-驼峰配置不生效" class="headerlink" title="B. 存数据 (INSERT) -&gt; 驼峰配置不生效"></a>B. 存数据 (<code>INSERT</code>) -&gt; 驼峰配置<strong>不</strong>生效</h4><ul><li><strong>方向：</strong> Java $\to$ 数据库</li><li><strong>原理：</strong> <code>#&#123;xxx&#125;</code> 的本质是调用 Java 对象的 <code>getXxx()</code> 方法拿到值，然后填入 SQL。</li><li>MyBatis 不会自动把你写的 <code>#&#123;master_id&#125;</code> 翻译成 <code>getMasterId()</code>。它只会傻傻地去调 <code>getMaster_id()</code>，调不到就报错。</li></ul><p><strong>一句话总结：SQL 语句中，括号左边的字段名写“数据库列名”（下划线），VALUES 括号里的 <code>#&#123;...&#125;</code> 写“Java 属性名”（驼峰）。</strong></p><h3 id="一张表总结区别"><a href="#一张表总结区别" class="headerlink" title="一张表总结区别"></a>一张表总结区别</h3><table><thead><tr><th><strong>URL 样式</strong></th><th><strong>注解</strong></th><th><strong>对应的 GetMapping</strong></th><th><strong>场景</strong></th></tr></thead><tbody><tr><td><code>/clazzs/5</code></td><td><strong><code>@PathVariable</code></strong></td><td><code>@GetMapping(&quot;/&#123;id&#125;&quot;)</code></td><td>获取单条资源详情</td></tr><tr><td><code>/clazzs?id=5</code></td><td><strong><code>@RequestParam</code></strong></td><td><code>@GetMapping</code></td><td>搜索、筛选、分页</td></tr></tbody></table><p><strong>结论：</strong> 你的代码里写了 <code>/&#123;id&#125;</code>，所以请直接把 <code>@RequestParam</code> 改成 <strong><code>@PathVariable</code></strong> 即可！</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 后端 </category>
+          
+          <category> SpringBoot </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 后端 </tag>
+            
+            <tag> 学习笔记 </tag>
+            
+            <tag> SpringBoot </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>[SpringBoot]注解@Transactional</title>
       <link href="/2026/01/27/SpringBoot-%E6%B3%A8%E8%A7%A3-Transactional/"/>
       <url>/2026/01/27/SpringBoot-%E6%B3%A8%E8%A7%A3-Transactional/</url>
@@ -15,13 +46,13 @@
           
           <category> 后端 </category>
           
-          <category> SpringBoot </category>
+          <category> 资料 </category>
           
           <category> 学习笔记 </category>
           
-          <category> 资料 </category>
-          
           <category> 后端 </category>
+          
+          <category> SpringBoot </category>
           
           <category> SpringBoot </category>
           
@@ -34,11 +65,11 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 实用资料 </tag>
             
             <tag> 后端 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -60,13 +91,13 @@
           
           <category> 后端 </category>
           
-          <category> SpringBoot </category>
+          <category> 资料 </category>
           
           <category> 学习笔记 </category>
           
-          <category> 资料 </category>
-          
           <category> 后端 </category>
+          
+          <category> SpringBoot </category>
           
           <category> SpringBoot </category>
           
@@ -79,11 +110,11 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 实用资料 </tag>
             
             <tag> 后端 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -177,13 +208,13 @@
           
           <category> 后端 </category>
           
-          <category> SpringBoot </category>
+          <category> 资料 </category>
           
           <category> 学习笔记 </category>
           
-          <category> 资料 </category>
-          
           <category> 后端 </category>
+          
+          <category> SpringBoot </category>
           
           <category> SpringBoot </category>
           
@@ -196,11 +227,11 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 实用资料 </tag>
             
             <tag> 后端 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -287,9 +318,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 后端 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -313,13 +344,13 @@
           
           <category> HTTP协议 </category>
           
-          <category> 学习笔记 </category>
-          
           <category> 资料 </category>
           
-          <category> 后端 </category>
+          <category> 学习笔记 </category>
           
           <category> HTTP </category>
+          
+          <category> 后端 </category>
           
           <category> HTTP协议 </category>
           
@@ -447,9 +478,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
             
@@ -484,9 +515,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
             
@@ -521,9 +552,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
             
@@ -558,9 +589,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
             
@@ -595,9 +626,9 @@
       
         <tags>
             
-            <tag> 学习笔记 </tag>
-            
             <tag> 数据库 </tag>
+            
+            <tag> 学习笔记 </tag>
             
             <tag> MySQL </tag>
             
