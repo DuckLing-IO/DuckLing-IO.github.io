@@ -4,6 +4,43 @@
   
     
     <entry>
+      <title>[SpringBoot]AOP</title>
+      <link href="/2026/01/30/SpringBoot-AOP/"/>
+      <url>/2026/01/30/SpringBoot-AOP/</url>
+      
+        <content type="html"><![CDATA[<h2 id="1-AOP-基础"><a href="#1-AOP-基础" class="headerlink" title="1. AOP 基础"></a>1. AOP 基础</h2><h3 id="1-1-连接点-Join-Point"><a href="#1-1-连接点-Join-Point" class="headerlink" title="1.1 连接点 (Join Point)"></a>1.1 连接点 (Join Point)</h3><ul><li><strong>定义</strong>：程序执行过程中的任意位置，在 Spring AOP 中，主要指<strong>所有可以被增强的方法</strong>。</li><li><strong>通俗理解</strong>：你的 Service 类里写了 10 个方法，这 10 个方法理论上<strong>都有资格</strong>被 AOP 拦截，它们都是连接点。</li></ul><h3 id="1-2-切入点-Pointcut"><a href="#1-2-切入点-Pointcut" class="headerlink" title="1.2 切入点 (Pointcut)"></a>1.2 切入点 (Pointcut)</h3><ul><li><strong>定义</strong>：对连接点进行过滤的定义（通常使用表达式 <code>execution(...)</code> 或注解 <code>@annotation</code>）。</li><li><strong>通俗理解</strong>：虽然 Service 有 10 个方法（连接点），但我只想拦截其中的 <code>saveUser()</code> 方法。这个**“选中的规则”**就是切入点。<ul><li><em>关系：连接点是候选者，切入点是最终选中的集合。</em></li></ul></li></ul><h3 id="1-3-通知-Advice"><a href="#1-3-通知-Advice" class="headerlink" title="1.3 通知 (Advice)"></a>1.3 通知 (Advice)</h3><ul><li><strong>定义</strong>：指在切入点上要执行的<strong>具体逻辑代码</strong>。</li><li><strong>类型</strong>：包括前置通知 (<code>@Before</code>)、后置通知 (<code>@After</code>)、环绕通知 (<code>@Around</code>) 等。</li><li><strong>通俗理解</strong>：你拦截到方法后<strong>想干什么</strong>？比如“记录日志”、“开启事务”或者“权限校验”，这些具体的业务逻辑就是通知。</li></ul><h3 id="1-4-切面-Aspect"><a href="#1-4-切面-Aspect" class="headerlink" title="1.4 切面 (Aspect)"></a>1.4 切面 (Aspect)</h3><ul><li><strong>定义</strong>：是切入点 (Pointcut) 和通知 (Advice) 的结合体。一个包含 <code>@Aspect</code> 注解的类。</li><li><strong>通俗理解</strong>：切面是一个“容器类”，它告诉 Spring：<strong>在哪里（切入点）做什幺（通知）</strong>。</li></ul><h3 id="1-5-目标对象-Target-Object"><a href="#1-5-目标对象-Target-Object" class="headerlink" title="1.5 目标对象 (Target Object)"></a>1.5 目标对象 (Target Object)</h3><ul><li><strong>定义</strong>：被一个或多个切面所通知的对象。</li><li><strong>通俗理解</strong>：就是你原本写的那个 Service 类（比如 <code>UserServiceImpl</code>），也就是被“动了手脚”的那个原始对象。</li></ul><hr><h2 id="2-AOP-底层实现原理-Under-the-Hood"><a href="#2-AOP-底层实现原理-Under-the-Hood" class="headerlink" title="2. AOP 底层实现原理 (Under the Hood)"></a>2. AOP 底层实现原理 (Under the Hood)</h2><p>这部分是你理解的核心，主要基于 <strong>动态代理 (Dynamic Proxy)</strong> 技术。</p><h3 id="2-1-代理对象的生成"><a href="#2-1-代理对象的生成" class="headerlink" title="2.1 代理对象的生成"></a>2.1 代理对象的生成</h3><p>当 Spring 容器启动并初始化 Bean 时，它会检测某个 Bean（比如 <code>UserService</code>）是否被切面（Aspect）所覆盖（即是否匹配到了切入点）。</p><ul><li><strong>如果匹配到</strong>：Spring 不会直接把原始的 <code>UserService</code> 对象放入容器，而是基于它生成一个 <strong>代理对象 (Proxy Object)</strong>。</li><li><strong>如果没有匹配</strong>：则直接创建原始对象。</li></ul><blockquote><p><strong>注意</strong>：Spring Boot 2.x 以后默认优先使用 <strong>CGLIB</strong> 代理（基于继承），如果类实现了接口也可能使用 <strong>JDK 动态代理</strong>（基于接口）。</p></blockquote><h3 id="2-2-依赖注入-Dependency-Injection-的真相"><a href="#2-2-依赖注入-Dependency-Injection-的真相" class="headerlink" title="2.2 依赖注入 (Dependency Injection) 的真相"></a>2.2 依赖注入 (Dependency Injection) 的真相</h3><p>在 Controller 层中，我们通常这样写：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserController</span> &#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> UserService userService; <span class="comment">// 这里注入的到底是谁？</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">login</span><span class="params">()</span> &#123;</span><br><span class="line">        userService.login(); <span class="comment">// 调用方法</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><ul><li><strong>注入过程</strong>：当 Controller 向 Spring 容器索要 <code>UserService</code> 时，因为 AOP 的存在，Spring 容器给它的<strong>不是</strong>原本定义的 <code>UserServiceImpl</code> 实例，而是<strong>生成的那个代理对象</strong>。</li><li><strong>指向关系</strong>：<code>userService</code> 变量 -&gt; <strong>指向</strong> -&gt; <code>代理对象 (Proxy)</code> -&gt; <strong>持有</strong> -&gt; <code>目标对象 (Target)</code>。</li></ul><hr><h2 id="3-运行时的执行流程-Execution-Flow"><a href="#3-运行时的执行流程-Execution-Flow" class="headerlink" title="3. 运行时的执行流程 (Execution Flow)"></a>3. 运行时的执行流程 (Execution Flow)</h2><p>当你调用 <code>userService.login()</code> 时，实际执行的是代理对象内部的逻辑。以下是基于<strong>环绕通知 (<code>@Around</code>)</strong> 的典型执行顺序：</p><h3 id="流程图解"><a href="#流程图解" class="headerlink" title="流程图解"></a>流程图解</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">graph TD</span><br><span class="line">    A[&quot;Controller 调用 userService.login()&quot;] --&gt; B(&quot;进入 代理对象 Proxy&quot;)</span><br><span class="line">    B --&gt; C&#123;&quot;是否有环绕通知?&quot;&#125;</span><br><span class="line">    C -- 是 --&gt; D[&quot;执行 @Around 通知的前置部分&quot;]</span><br><span class="line">    D --&gt; E[&quot;遇到 pjp.proceed()&quot;]</span><br><span class="line">    E --&gt; F[&quot;执行 目标对象 Target 的原始 login() 方法&quot;]</span><br><span class="line">    F --&gt; G[&quot;目标方法返回结果&quot;]</span><br><span class="line">    G --&gt; H[&quot;执行 @Around 通知的后置部分&quot;]</span><br><span class="line">    H --&gt; I(&quot;代理对象返回最终结果&quot;)</span><br><span class="line">    I --&gt; J[&quot;Controller 拿到返回值&quot;]</span><br></pre></td></tr></table></figure><h3 id="代码逻辑映射"><a href="#代码逻辑映射" class="headerlink" title="代码逻辑映射"></a>代码逻辑映射</h3><p>假设你在切面中写了如下代码：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Around(&quot;...&quot;)</span> <span class="comment">// 环绕通知</span></span><br><span class="line"><span class="keyword">public</span> Object <span class="title function_">recordLog</span><span class="params">(ProceedingJoinPoint pjp)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    <span class="comment">// 1. 代理对象先执行这里</span></span><br><span class="line">    System.out.println(<span class="string">&quot;&gt;&gt;&gt; 开启事务/记录日志...&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 关键点：pjp.proceed()</span></span><br><span class="line">    <span class="comment">// 这行代码就像一个开关，它会去调用“目标对象”的原始方法</span></span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> pjp.proceed(); </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 3. 原始方法执行完，控制权回到代理对象</span></span><br><span class="line">    System.out.println(<span class="string">&quot;&gt;&gt;&gt; 提交事务/结束日志...&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> result; <span class="comment">// 4. 将结果返回给 Controller</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h3 id=""><a href="#" class="headerlink" title=""></a><img src="/2026/01/30/SpringBoot-AOP/image-20260130160542937.png" class="" title="代理对象示例图"></h3><hr><h2 id="4-AOP-进阶"><a href="#4-AOP-进阶" class="headerlink" title="4. AOP 进阶"></a>4. AOP 进阶</h2><h3 id="4-1-通知类型"><a href="#4-1-通知类型" class="headerlink" title="4.1 通知类型"></a>4.1 通知类型</h3><p>Spring 提供了 5 种通知类型，通过不同的注解实现：</p><table><thead><tr><th><strong>注解</strong></th><th><strong>通知类型</strong></th><th><strong>执行时机</strong></th><th><strong>备注</strong></th></tr></thead><tbody><tr><td><strong><code>@Around</code></strong></td><td><strong>环绕通知</strong></td><td><strong>方法执行前后</strong></td><td><strong>功能最强</strong>。必须调用 <code>pjp.proceed()</code> 执行原始方法；必须返回 Object。</td></tr><tr><td><code>@Before</code></td><td>前置通知</td><td>方法执行前</td><td>常用于参数校验。</td></tr><tr><td><code>@After</code></td><td>后置通知</td><td>方法执行后</td><td>无论是否异常都会执行（类似 finally）。</td></tr><tr><td><code>@AfterReturning</code></td><td>返回后通知</td><td>方法正常返回后</td><td>发生异常时不执行。</td></tr><tr><td><code>@AfterThrowing</code></td><td>异常后通知</td><td>方法抛出异常后</td><td>仅在报错时执行。</td></tr></tbody></table><h3 id="4-2-通知顺序"><a href="#4-2-通知顺序" class="headerlink" title="4.2 通知顺序"></a>4.2 通知顺序</h3><p>当多个切面类（Aspect）同时切入同一个方法时，执行顺序如下：</p><ul><li><strong>默认规则</strong>：按照切面类的<strong>类名字母排序</strong>。</li><li><strong>自定义控制</strong>：使用 <strong><code>@Order(数字)</code></strong> 注解。<ul><li><strong>规则</strong>：<ul><li><strong>前置通知</strong> (<code>Before</code>)：数字越<strong>小</strong>，越<strong>先</strong>执行。</li><li><strong>后置通知</strong> (<code>After</code>)：数字越<strong>小</strong>，越<strong>后</strong>执行。</li></ul></li><li><strong>模型</strong>：类似于“洋葱圈”或“栈”结构（先进后出）。</li></ul></li></ul><h3 id="4-3-切入点表达式"><a href="#4-3-切入点表达式" class="headerlink" title="4.3 切入点表达式"></a>4.3 切入点表达式</h3><p>用于描述需要增强哪些方法，主要有两种写法：</p><h4 id="4-3-1-execution-根据方法签名匹配"><a href="#4-3-1-execution-根据方法签名匹配" class="headerlink" title="4.3.1 execution (根据方法签名匹配)"></a>4.3.1 execution (根据方法签名匹配)</h4><ul><li><strong>语法</strong>：<code>execution(访问修饰符? 返回值 包名.类名.?方法名(方法参数) throws 异常?)</code></li><li><strong>通配符</strong>：<ul><li><code>*</code> ：匹配单个任意符号（任意返回值、包名、类名、方法名、单个参数）。</li><li><code>..</code> ：匹配多个连续任意符号（任意层级包、任意个数参数）。</li></ul></li><li><strong>常用示例</strong>：<ul><li><code>execution(* com.itheima.service.*.*(..))</code>：匹配 service 包下所有类的所有方法。</li><li><code>execution(* com.itheima.service.impl.DeptServiceImpl.delete(*))</code>：匹配特定类的 delete 方法。</li></ul></li><li><strong>建议</strong>：基于接口描述，不基于实现类描述，增强扩展性。</li></ul><h4 id="4-3-2-annotation-根据注解匹配"><a href="#4-3-2-annotation-根据注解匹配" class="headerlink" title="4.3.2 @annotation (根据注解匹配)"></a>4.3.2 @annotation (根据注解匹配)</h4><ul><li><p><strong>适用场景</strong>：当需要匹配的方法<strong>没有规律</strong>（例如：既包含 <code>save</code> 又包含 <code>delete</code>，但不包含 <code>get</code>），使用 execution 很难描述时。</p></li><li><p><strong>步骤</strong>：</p><p>自定义一个注解（如 <code>@Log</code>）。</p><img src="/2026/01/30/SpringBoot-AOP/image-20260130161236251.png" class="" title="Log类示例"><p>在需要增强的方法上加上该注解。</p><img src="/2026/01/30/SpringBoot-AOP/image-20260130161352651.png"  alt="在方法上增加该注解"  /><p>表达式写法：<code>&quot;@annotation(com.duckling.anno.Log)&quot;</code>。</p><img src="/2026/01/30/SpringBoot-AOP/image-20260130161533270.png" class="" title="AOP类中表达式声明书写"></li></ul><hr><h2 id="5-AOP-案例：操作日志记录"><a href="#5-AOP-案例：操作日志记录" class="headerlink" title="5. AOP 案例：操作日志记录"></a>5. AOP 案例：操作日志记录</h2><h3 id="5-1-需求"><a href="#5-1-需求" class="headerlink" title="5.1 需求"></a>5.1 需求</h3><p>记录系统中所有“增、删、改”功能接口的操作日志。</p><ul><li><strong>记录字段</strong>：操作人 ID、操作时间、全类名、方法名、方法参数、返回值、执行耗时。</li></ul><h3 id="5-2-分析"><a href="#5-2-分析" class="headerlink" title="5.2 分析"></a>5.2 分析</h3><ul><li><strong>技术选型</strong>：使用 AOP 的 <strong><code>@Around</code> 环绕通知</strong>（因为需要同时获取开始时间、结束时间和返回值）。</li><li><strong>切入点</strong>：由于增删改方法名可能不规则，采用 <strong><code>@annotation</code></strong> 方式。</li></ul><h3 id="5-3-步骤"><a href="#5-3-步骤" class="headerlink" title="5.3 步骤"></a>5.3 步骤</h3><ol><li>引入 AOP 依赖。</li><li>准备数据库表 <code>operate_log</code> 和实体类。</li><li>自定义注解 <code>@LogOperation</code>。</li><li>编写切面类 <code>OperationLogAspect</code>，实现日志记录逻辑。</li></ol><h3 id="5-4-代码实现-核心逻辑"><a href="#5-4-代码实现-核心逻辑" class="headerlink" title="5.4 代码实现 (核心逻辑)"></a>5.4 代码实现 (核心逻辑)</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OperationLogAspect</span> &#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> OperateLogMapper operateLogMapper;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Around(&quot;@annotation(com.itheima.anno.LogOperation)&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> Object <span class="title function_">recordLog</span><span class="params">(ProceedingJoinPoint joinPoint)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">        <span class="comment">// 1. 记录开始时间</span></span><br><span class="line">        <span class="type">long</span> <span class="variable">begin</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="comment">// 2. 执行原始方法</span></span><br><span class="line">        <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> joinPoint.proceed();</span><br><span class="line">        <span class="comment">// 3. 计算耗时</span></span><br><span class="line">        <span class="type">long</span> <span class="variable">end</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 4. 获取日志信息并保存 (异步或同步)</span></span><br><span class="line">        <span class="type">OperateLog</span> <span class="variable">log</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">OperateLog</span>();</span><br><span class="line">        log.setClassName(joinPoint.getTarget().getClass().getName()); <span class="comment">// 类名</span></span><br><span class="line">        log.setMethodName(joinPoint.getSignature().getName());       <span class="comment">// 方法名</span></span><br><span class="line">        log.setMethodParams(Arrays.toString(joinPoint.getArgs()));   <span class="comment">// 参数</span></span><br><span class="line">        log.setReturnValue(result.toString());                       <span class="comment">// 返回值</span></span><br><span class="line">        <span class="comment">// ... 设置其他属性 ...</span></span><br><span class="line">        operateLogMapper.insert(log);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h3 id="5-5-连接点-JoinPoint"><a href="#5-5-连接点-JoinPoint" class="headerlink" title="5.5 连接点 (JoinPoint)"></a>5.5 连接点 (JoinPoint)</h3><p>在通知方法中，通过参数获取目标方法的信息：</p><ul><li><strong><code>ProceedingJoinPoint</code></strong>：<strong>仅用于 <code>@Around</code></strong>。特有方法 <code>proceed()</code> 用于执行目标方法。</li><li><strong><code>JoinPoint</code></strong>：用于其他四种通知。</li><li><strong>常用 API</strong>：<ul><li><code>getArgs()</code>: 获取方法参数。</li><li><code>getTarget()</code>: 获取目标对象。</li><li><code>getSignature()</code>: 获取方法签名（方法名等）。</li></ul></li></ul><h3 id="5-6-获取当前登录员工"><a href="#5-6-获取当前登录员工" class="headerlink" title="5.6 获取当前登录员工"></a>5.6 获取当前登录员工</h3><p>AOP 切面本身无法直接从 Request 中解析 Token（虽然可以注入 Request，但解析逻辑重复）。最佳实践是结合 <strong>Filter&#x2F;Interceptor</strong> 和 <strong>ThreadLocal</strong>。</p><h4 id="5-6-1-ThreadLocal"><a href="#5-6-1-ThreadLocal" class="headerlink" title="5.6.1 ThreadLocal"></a>5.6.1 ThreadLocal</h4><ul><li><strong>定义</strong>：线程局部变量。</li><li><strong>作用</strong>：为每个线程提供独立的变量副本，实现<strong>线程间的数据隔离</strong>。Tomcat 中每个请求由一个独立线程处理，ThreadLocal 非常适合在同一个请求的调用链（Filter -&gt; Controller -&gt; Service -&gt; AOP -&gt; Mapper）中共享数据。</li><li><strong>核心方法</strong>：<ul><li><code>set(T value)</code>: 存入数据。</li><li><code>get()</code>: 取出数据。</li><li><strong><code>remove()</code></strong>: 清理数据（<strong>至关重要</strong>，防止内存泄漏）。</li></ul></li></ul><h4 id="5-6-2-记录当前登录员工-完整流程"><a href="#5-6-2-记录当前登录员工-完整流程" class="headerlink" title="5.6.2 记录当前登录员工 (完整流程)"></a>5.6.2 记录当前登录员工 (完整流程)</h4><ol><li><strong>准备工具类</strong>：创建一个 <code>BaseContext</code> 工具类，封装 ThreadLocal 的 set&#x2F;get&#x2F;remove 方法。</li><li><strong>Filter&#x2F;Interceptor 层</strong>：<ul><li>解析请求头中的 JWT 令牌。</li><li>获取用户 ID。</li><li>调用 <code>BaseContext.setCurrentId(id)</code> <strong>存入</strong> ThreadLocal。</li><li><strong>关键点</strong>：在 <code>finally</code> 块或 <code>afterCompletion</code> 中调用 <code>BaseContext.remove()</code> <strong>清理</strong>数据。</li></ul></li><li><strong>AOP 层</strong>：<ul><li>直接调用 <code>BaseContext.getCurrentId()</code> 获取当前操作人的 ID，填入日志对象。</li></ul></li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> 后端 </category>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 后端 </category>
+          
+          <category> SpringBoot </category>
+          
+          <category> SpringBoot </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 学习笔记 </tag>
+            
+            <tag> 后端 </tag>
+            
+            <tag> SpringBoot </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>[SpringBoot]学习杂记260128</title>
       <link href="/2026/01/29/SpringBoot-%E5%AD%A6%E4%B9%A0%E6%9D%82%E8%AE%B0260128/"/>
       <url>/2026/01/29/SpringBoot-%E5%AD%A6%E4%B9%A0%E6%9D%82%E8%AE%B0260128/</url>
@@ -22,9 +59,9 @@
       
         <tags>
             
-            <tag> 后端 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 后端 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -67,9 +104,9 @@
             
             <tag> 实用资料 </tag>
             
-            <tag> 后端 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 后端 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -112,9 +149,9 @@
             
             <tag> 实用资料 </tag>
             
-            <tag> 后端 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 后端 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -171,9 +208,9 @@
           
           <category> 后端 </category>
           
-          <category> MyBatis </category>
-          
           <category> 资料 </category>
+          
+          <category> MyBatis </category>
           
           <category> MyBatis </category>
           
@@ -229,9 +266,9 @@
             
             <tag> 实用资料 </tag>
             
-            <tag> 后端 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 后端 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -251,9 +288,9 @@
       
       <categories>
           
-          <category> 算法 </category>
-          
           <category> 资料 </category>
+          
+          <category> 算法 </category>
           
           <category> STL </category>
           
@@ -318,9 +355,9 @@
       
         <tags>
             
-            <tag> 后端 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 后端 </tag>
             
             <tag> SpringBoot </tag>
             
@@ -346,9 +383,9 @@
           
           <category> 资料 </category>
           
-          <category> 学习笔记 </category>
-          
           <category> HTTP </category>
+          
+          <category> 学习笔记 </category>
           
           <category> 后端 </category>
           
@@ -381,9 +418,9 @@
       
       <categories>
           
-          <category> 算法 </category>
-          
           <category> 学习笔记 </category>
+          
+          <category> 算法 </category>
           
           <category> 枚举 </category>
           
@@ -426,11 +463,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 前端 </category>
           
           <category> JavaScript </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 前端 </category>
           
@@ -463,11 +500,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 数据库 </category>
           
           <category> MySQL </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 数据库 </category>
           
@@ -478,9 +515,9 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 数据库 </tag>
             
             <tag> MySQL </tag>
             
@@ -500,11 +537,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 数据库 </category>
           
           <category> MySQL </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 数据库 </category>
           
@@ -515,9 +552,9 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 数据库 </tag>
             
             <tag> MySQL </tag>
             
@@ -537,11 +574,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 数据库 </category>
           
           <category> MySQL </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 数据库 </category>
           
@@ -552,9 +589,9 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 数据库 </tag>
             
             <tag> MySQL </tag>
             
@@ -574,11 +611,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 数据库 </category>
           
           <category> MySQL </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 数据库 </category>
           
@@ -589,9 +626,9 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 数据库 </tag>
             
             <tag> MySQL </tag>
             
@@ -611,11 +648,11 @@
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 数据库 </category>
           
           <category> MySQL </category>
-          
-          <category> 学习笔记 </category>
           
           <category> 数据库 </category>
           
@@ -626,9 +663,9 @@
       
         <tags>
             
-            <tag> 数据库 </tag>
-            
             <tag> 学习笔记 </tag>
+            
+            <tag> 数据库 </tag>
             
             <tag> MySQL </tag>
             
