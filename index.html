@@ -1,14 +1,22 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+<!-- ═══════════════════════════════════════════ -->
+<!-- 头部元数据：网站标题、编码、标签页小图标(favicon)等 -->
+<!-- ═══════════════════════════════════════════ -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DuckLing</title>
-<link rel="icon" type="image/png" href="https://github.com/DuckLing-IO.png">
+<!-- 🌐 网站标签页小图标(favicon)：修改 href 可更换图标 -->
+<link rel="icon" type="image/jpeg" href="imgs/index/avatar.jpg">
 <style>
+  /* ═══════════════════════════════════════════════════════ */
+  /*              全局样式 & CSS 变量（主题配色）            */
+  /* ═══════════════════════════════════════════════════════ */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { font-size: 16px; -webkit-font-smoothing: antialiased; }
 
+  /* 🎨 CSS 变量：修改这里的颜色值可一键更换整站主题色 */
   :root {
     --bg: #08080a;
     --text-primary: #f5f5f7;
@@ -20,6 +28,7 @@
     --transition: 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
   }
 
+  /* 📄 页面主体：深色背景 + 内容居中 */
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
     background: var(--bg);
@@ -31,6 +40,7 @@
     overflow-x: hidden;
   }
 
+  /* ✦ 背景点阵纹理（装饰用） */
   body::before {
     content: "";
     position: fixed;
@@ -41,6 +51,7 @@
     z-index: 0;
   }
 
+  /* 🎬 渐入动画：页面加载时各模块依次浮现 */
   @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(28px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -54,6 +65,7 @@
   .anim-body    { opacity: 0; animation: fadeInUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.9s forwards; }
   .anim-footer  { opacity: 0; animation: fadeIn   0.6s cubic-bezier(0.16,1,0.3,1) 1.4s forwards; }
 
+  /* ⌨️ 标题后光标闪烁效果 */
   @keyframes blink {
     0%, 100% { opacity: 1; }
     50%      { opacity: 0; }
@@ -63,6 +75,7 @@
     animation: blink 1.2s step-end infinite;
   }
 
+  /* 📦 主容器：所有内容的最大宽度限制 + 垂直居中布局 */
   .main {
     position: relative;
     z-index: 1;
@@ -75,22 +88,25 @@
     gap: 72px;
   }
 
+  /* 👤 头像 + 标题区（Hero 模块） */
   .hero {
     display: flex;
     align-items: center;
     gap: 52px;
     width: 100%;
   }
+  /* 🖼️ 头像图片：修改 src 属性可更换头像 */
   .avatar {
-    width: 200px;
-    height: 200px;
-    border-radius: 40px;
+    width: 300px;
+    height: 300px;
+    border-radius: 10px;
     object-fit: cover;
     flex-shrink: 0;
     background: var(--surface);
     user-select: none;
     -webkit-user-drag: none;
   }
+  /* 🏷️ 标题文字：昵称 + 一句话介绍 */
   .hero-text {
     display: flex;
     flex-direction: column;
@@ -111,6 +127,7 @@
   }
   .hero-text .tagline span { color: var(--text-tertiary); }
 
+  /* 🔗 社交链接按钮区（GitHub / Blog / Email / Resources） */
   .links {
     display: flex;
     flex-wrap: wrap;
@@ -118,6 +135,7 @@
     justify-content: center;
     width: 100%;
   }
+  /* 🔘 单个链接按钮样式 */
   .link-btn {
     display: inline-flex;
     align-items: center;
@@ -158,6 +176,7 @@
     transform: translateX(2px);
   }
 
+  /* ── 分割线 ── */
   .sep {
     width: 100%;
     height: 1px;
@@ -166,6 +185,7 @@
     opacity: 0.5;
   }
 
+  /* 📊 GitHub 贡献图模块 */
   .contrib-section {
     width: 100%;
     display: flex;
@@ -195,12 +215,14 @@
     mix-blend-mode: multiply;
   }
 
+  /* 📝 页脚版权信息 */
   .footer {
     font-size: 0.85rem;
     color: var(--text-tertiary);
     text-align: center;
   }
 
+  /* 🔔 Toast 提示弹窗：复制 Email 成功后显示 */
   /* ── Toast ── */
   @keyframes toastIn {
     from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)) scale(0.95); }
@@ -241,6 +263,7 @@
     color: #39d353;
   }
 
+  /* 📱 移动端响应式适配（屏幕宽度 ≤ 720px 时生效） */
   @media (max-width: 720px) {
     .hero {
       flex-direction: column;
@@ -260,32 +283,44 @@
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--                       页面主体内容开始                          -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
 <main class="main">
 
+  <!-- 👤 Hero 模块：头像 + 昵称 + 个人简介 -->
   <section class="hero anim-hero">
-    <img class="avatar" src="https://github.com/DuckLing-IO.png" alt="DuckLing's avatar" onerror="this.style.display='none'">
+    <!-- 🖼️ 头像图片：修改 src 可更换为自己的头像 -->
+    <img class="avatar" src="imgs/index/avatar.jpg" alt="DuckLing's avatar" onerror="this.style.display='none'">
     <div class="hero-text">
+      <!-- 🏷️ 昵称（修改文本即可改名） -->
       <h1>DuckLing<span class="cursor"></span></h1>
+      <!-- 📝 个人简介/一句话介绍 -->
       <p class="tagline">Developer &amp; Creator<span> — 构建 · 记录 · 分享</span></p>
     </div>
   </section>
 
+  <!-- 🔗 社交链接导航栏：GitHub / Blog / Email / Resources -->
   <nav class="links anim-links">
+    <!-- 🐙 GitHub 链接：修改 href 为你的 GitHub 主页地址 -->
     <a class="link-btn" href="https://github.com/DuckLing-IO" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
       GitHub
       <span class="arrow">→</span>
     </a>
+    <!-- 📝 Blog 链接：修改 href 为你的博客地址 -->
     <a class="link-btn" href="#" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
       Blog
       <span class="arrow">→</span>
     </a>
+    <!-- 📧 Email 按钮：点击复制邮箱地址到剪贴板 -->
     <button class="link-btn" id="emailBtn" onclick="copyEmail()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
       Email
       <span class="arrow">→</span>
     </button>
+    <!-- 📂 Resources 资源链接：修改 href 为你的资源页面地址 -->
     <a class="link-btn" href="#" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
       Resources
@@ -293,29 +328,36 @@
     </a>
   </nav>
 
+  <!-- 📊 GitHub 贡献图模块 -->
   <div class="anim-body" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:18px">
     <hr class="sep">
     <section class="contrib-section">
       <span class="contrib-label">GitHub Contributions</span>
       <div class="contrib-card">
+        <!-- 🗓️ GitHub 贡献热力图：修改 URL 中的 GitHub 用户名可显示你的贡献图 -->
         <img src="https://ghchart.rshah.org/DuckLing-IO" alt="GitHub contribution chart" loading="lazy">
       </div>
     </section>
   </div>
 
+  <!-- 📝 页脚：版权信息 -->
   <footer class="footer anim-footer">
     &copy; 2026 DuckLing &mdash; Built with Claude Code and &hearts;
   </footer>
 
 </main>
 
+<!-- 🔔 Toast 弹窗：复制 Email 成功时短暂显示 -->
 <div id="toast" class="toast" style="display:none">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
   复制成功
 </div>
 
+<!-- ⚙️ JavaScript：复制邮箱功能 -->
 <script>
+// 📧 点击 Email 按钮时，将邮箱地址写入剪贴板并显示 Toast 提示
 function copyEmail() {
+  // ⚠️ 修改这里的邮箱地址为你自己的
   navigator.clipboard.writeText('2275628883@qq.com').then(() => {
     const t = document.getElementById('toast');
     t.style.display = 'flex';
