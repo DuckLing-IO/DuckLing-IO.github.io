@@ -456,11 +456,11 @@ function copyEmail() {
   async function load() {
     let count = 0;
     try {
-      const resp = await fetch(API);
+      // POST 触发计数递增，返回递增后的值
+      const resp = await fetch(API, { method: 'POST' });
       if (!resp.ok) throw new Error('Bad response');
-      const raw = await resp.text();
-      try { const d = JSON.parse(raw); count = d.count || d.views || d.value || 0; }
-      catch { count = parseInt(raw) || 0; }
+      const d = await resp.json();
+      count = d.views ?? d.count ?? d.value ?? 0;
     } catch (e) {
       showError();
       return;

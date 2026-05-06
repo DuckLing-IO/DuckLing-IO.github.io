@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git *)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(curl *)"
     ]
   }
 }
