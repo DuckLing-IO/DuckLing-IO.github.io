@@ -215,6 +215,61 @@
     mix-blend-mode: multiply;
   }
 
+  /* 🔢 网站浏览计数模块 */
+  .view-counter-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .view-counter-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    letter-spacing: 0.08em;
+  }
+  .view-counter-display {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    perspective: 600px;
+  }
+  .digit-card {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 94px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 3.2rem;
+    font-weight: 700;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+    font-family: "SF Mono", "Fira Code", "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
+    transition: transform 0.1s cubic-bezier(0.4, 0, 0.6, 1);
+    user-select: none;
+    box-shadow:
+      0 4px 16px rgba(0,0,0,0.25),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .digit-card.flipping {
+    transform: rotateX(90deg);
+  }
+  .digit-card::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    top: 50%;
+    height: 1px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 1px;
+  }
+
   /* 📝 页脚版权信息 */
   .footer {
     font-size: 0.85rem;
@@ -278,6 +333,14 @@
     .links { gap: 12px; }
     .link-btn { padding: 14px 24px; font-size: 1rem; }
     .contrib-card { padding: 20px 16px 14px; }
+    .view-counter-display { gap: 5px; }
+    .digit-card {
+      width: 42px;
+      height: 64px;
+      border-radius: 8px;
+      font-size: 2rem;
+    }
+    .digit-card::after { left: 1px; right: 1px; }
   }
 </style>
 </head>
@@ -338,6 +401,15 @@
         <img src="https://ghchart.rshah.org/DuckLing-IO" alt="GitHub contribution chart" loading="lazy">
       </div>
     </section>
+
+    <!-- 🔢 网站浏览计数模块 -->
+    <hr class="sep">
+    <section class="view-counter-section">
+      <span class="view-counter-label">本站浏览人次</span>
+      <div class="view-counter-display" id="viewCounter">
+        <span class="digit-card">0</span><span class="digit-card">0</span><span class="digit-card">0</span><span class="digit-card">0</span><span class="digit-card">0</span><span class="digit-card">0</span>
+      </div>
+    </section>
   </div>
 
   <!-- 📝 页脚：版权信息 -->
@@ -374,6 +446,92 @@ function copyEmail() {
     }, 1800);
   });
 }
+
+// 🔢 网站浏览计数：从 Cloudflare Worker 获取浏览量并执行翻牌动画
+(function initViewCounter() {
+  const DISPLAY = document.getElementById('viewCounter');
+  const API = 'https://views.duckee.top/counter/site-views';
+  const startTime = Date.now();
+
+  async function load() {
+    let count = 0;
+    try {
+      const resp = await fetch(API);
+      if (!resp.ok) throw new Error('Bad response');
+      const raw = await resp.text();
+      try { const d = JSON.parse(raw); count = d.count || d.views || d.value || 0; }
+      catch { count = parseInt(raw) || 0; }
+    } catch (e) {
+      showError();
+      return;
+    }
+
+    const targetStr = String(count);
+    // 确保初始零值至少显示 400ms
+    const elapsed = Date.now() - startTime;
+    if (elapsed < 400) await delay(400 - elapsed);
+
+    // 如果位数不同则重建卡片
+    rebuildCards(targetStr);
+
+    const cards = Array.from(DISPLAY.children);
+    // 从右向左依次启动各位数字的翻牌动画
+    for (let i = cards.length - 1; i >= 0; i--) {
+      const target = parseInt(targetStr[i], 10);
+      const staggerDelay = (cards.length - 1 - i) * 80;
+      setTimeout(() => flipDigit(cards[i], target), staggerDelay);
+    }
+  }
+
+  function flipDigit(el, target) {
+    if (target === 0) return;
+    let current = 0;
+    function tick() {
+      if (current >= target) return;
+      el.classList.add('flipping');
+      setTimeout(() => {
+        current++;
+        el.textContent = current;
+        el.classList.remove('flipping');
+        const progress = current / target;
+        const interval = 30 + progress * 120 + Math.random() * 25;
+        setTimeout(tick, interval);
+      }, 100);
+    }
+    setTimeout(tick, 50);
+  }
+
+  function rebuildCards(str) {
+    if (DISPLAY.children.length === str.length) return;
+    DISPLAY.innerHTML = '';
+    for (let i = 0; i < str.length; i++) {
+      const span = document.createElement('span');
+      span.className = 'digit-card';
+      span.textContent = '0';
+      DISPLAY.appendChild(span);
+    }
+  }
+
+  function showError() {
+    DISPLAY.innerHTML = '';
+    for (let i = 0; i < 6; i++) {
+      const span = document.createElement('span');
+      span.className = 'digit-card';
+      span.textContent = '-';
+      DISPLAY.appendChild(span);
+    }
+  }
+
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', load);
+  } else {
+    load();
+  }
+})();
 </script>
 
 </body>
