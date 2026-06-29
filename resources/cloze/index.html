@@ -195,18 +195,14 @@ body::before {
 .score-text.ok { color: var(--wrong); }
 
 /* ═══════════════════════════════════════════════════════ */
-/*                    Word Bank                           */
+/*                 Sticky Header                          */
 /* ═══════════════════════════════════════════════════════ */
-.word-bank-section {
-  display: none;
+.sticky-header {
   position: sticky; top: 0; z-index: 100;
-  padding: 12px 0 14px;
-  margin: -12px -32px 0;
-  padding-left: 32px; padding-right: 32px;
+  margin: -24px -32px 0;
+  padding: 24px 32px 14px 32px;
 }
-.word-bank-section.visible { display: block; }
-
-.word-bank-section::before {
+.sticky-header::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -215,7 +211,15 @@ body::before {
   -webkit-backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--border);
   pointer-events: none;
+  z-index: 0;
 }
+.sticky-header > * { position: relative; z-index: 1; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*                    Word Bank                           */
+/* ═══════════════════════════════════════════════════════ */
+.word-bank-section { display: none; }
+.word-bank-section.visible { display: block; }
 
 .word-bank {
   position: relative; z-index: 1;
@@ -395,7 +399,7 @@ body::before {
   .q-sentence { font-size: 0.98rem; line-height: 1.7; }
   .question-card { padding: 18px 16px; }
   .blank-slot { min-width: 60px; height: 28px; }
-  .word-bank-section { margin: -12px -16px 0; padding-left: 16px; padding-right: 16px; }
+  .sticky-header { margin: -12px -16px 0; padding: 12px 16px 10px 16px; }
   .word-bank { padding: 12px 12px; gap: 8px; }
   .chip { padding: 7px 14px; font-size: 0.85rem; }
   .type-options { gap: 6px; }
@@ -407,6 +411,9 @@ body::before {
 <body>
 
 <main class="main">
+
+  <!-- ═══ Sticky Header: top bar + settings + score + word bank ═══ -->
+  <div class="sticky-header" id="stickyHeader">
 
   <!-- Top Bar -->
   <div class="top-bar anim-1">
@@ -464,6 +471,8 @@ body::before {
   <div class="word-bank-section anim-2" id="wordBankSection">
     <div class="word-bank" id="wordBank"></div>
   </div>
+
+  </div><!-- /sticky-header -->
 
   <!-- Questions -->
   <div class="questions-section anim-3" id="questionsSection">
@@ -739,8 +748,7 @@ function startQuiz() {
   document.getElementById('actions').classList.add('visible');
   document.getElementById('footer').classList.add('visible');
 
-  // Scroll to questions
-  document.getElementById('questionsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Sticky header is always visible — no need to scroll
 }
 
 /* ═══════════════════════════════════════════════════════ */
@@ -1079,8 +1087,8 @@ function submitAnswers() {
   renderQuestions();
   renderActions();
 
-  // Scroll to score
-  scoreBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Scroll to top so user sees score bar in sticky header
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* ═══════════════════════════════════════════════════════ */
@@ -1099,6 +1107,7 @@ function restartQuiz() {
   state.dragInfo = null;
 
   startQuiz();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* ═══════════════════════════════════════════════════════ */
