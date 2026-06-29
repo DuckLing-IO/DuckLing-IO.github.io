@@ -748,7 +748,7 @@ function startQuiz() {
   document.getElementById('actions').classList.add('visible');
   document.getElementById('footer').classList.add('visible');
 
-  // Sticky header is always visible — no need to scroll
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 /* ═══════════════════════════════════════════════════════ */
