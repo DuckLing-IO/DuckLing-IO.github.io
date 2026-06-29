@@ -1072,49 +1072,18 @@ function submitAnswers() {
 /*              Restart                                   */
 /* ═══════════════════════════════════════════════════════ */
 function restartQuiz() {
-  // Show settings panel
-  document.getElementById('settingsPanel').classList.add('open');
-
-  // Reset display
+  // Keep current settings, just regenerate a fresh quiz
   document.getElementById('scoreBar').classList.remove('visible');
-  document.getElementById('wordBankSection').classList.remove('visible');
-  document.getElementById('questionsSection').classList.remove('visible');
-  document.getElementById('actions').classList.remove('visible');
-  document.getElementById('footer').classList.remove('visible');
-
-  // Clear
   document.getElementById('wordBank').innerHTML = '';
   document.getElementById('questionList').innerHTML = '';
 
-  // Reset state
   state.submitted = false;
   state.questions = [];
   state.blanks = [];
   state.wordBank = [];
   state.dragInfo = null;
-  state.selectedUnit = null;
-  // Reset to mixed mode with default count
-  state.questionType = 'mixed';
-  state.questionCount = 10;
 
-  // Reset type buttons
-  document.querySelectorAll('#typeOptions .type-btn').forEach(b => b.classList.remove('active'));
-  const mixedBtn = document.querySelector('#typeOptions .type-btn[data-type="mixed"]');
-  if (mixedBtn) mixedBtn.classList.add('active');
-
-  // Reset unit selector
-  document.querySelectorAll('#unitOptions .type-btn').forEach(b => b.classList.remove('active'));
-  // Re-enable count buttons
-  const cm = document.getElementById('countMinus');
-  const cp = document.getElementById('countPlus');
-  cm.style.opacity = ''; cm.style.pointerEvents = '';
-  cp.style.opacity = ''; cp.style.pointerEvents = '';
-  document.getElementById('countLabel').textContent = '题目数量';
-  document.getElementById('countDisplay').textContent = '10';
-  document.getElementById('unitGroup').style.display = 'none';
-
-  // Scroll to top
-  document.getElementById('settingsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  startQuiz();
 }
 
 /* ═══════════════════════════════════════════════════════ */
