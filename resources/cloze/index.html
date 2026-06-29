@@ -167,7 +167,15 @@ body::before {
 .count-btn:active { background: rgba(255,255,255,0.06); }
 .count-display {
   font-size: 1.5rem; font-weight: 600; font-family: var(--font-mono);
-  color: var(--text-primary); min-width: 48px; text-align: center;
+  color: var(--text-primary); width: 64px; text-align: center;
+  background: transparent; border: none; outline: none;
+  -moz-appearance: textfield;
+}
+.count-display::-webkit-outer-spin-button,
+.count-display::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.count-display:focus {
+  border-bottom: 1px solid var(--text-secondary);
+  margin-bottom: -1px;
 }
 
 .start-btn {
@@ -181,6 +189,30 @@ body::before {
 }
 .start-btn:hover { opacity: 0.85; transform: translateY(-1px); }
 .start-btn:active { transform: scale(0.97); }
+
+/* ── Toggle Switch ── */
+.toggle-row { display: flex; align-items: center; gap: 12px; }
+.toggle-label { font-size: 0.9rem; color: var(--text-secondary); }
+.toggle-switch {
+  position: relative; width: 48px; height: 28px;
+  border-radius: 100px; border: 1px solid var(--border);
+  background: transparent; cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent; user-select: none;
+  padding: 0;
+}
+.toggle-switch .toggle-knob {
+  position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+.toggle-switch.active {
+  background: var(--accent); border-color: var(--accent);
+}
+.toggle-switch.active .toggle-knob {
+  left: 23px; background: var(--bg);
+}
 
 /* ── Score Bar (after submit) ── */
 .score-bar {
@@ -454,8 +486,17 @@ body::before {
         <span class="setting-label" id="countLabel">题目数量</span>
         <div class="count-row">
           <button class="count-btn" id="countMinus" onclick="adjustCount(-1)" aria-label="减少">−</button>
-          <span class="count-display" id="countDisplay">10</span>
+          <input type="number" class="count-display" id="countDisplay" value="10" min="5" max="30" onchange="onCountInput()">
           <button class="count-btn" id="countPlus" onclick="adjustCount(1)" aria-label="增加">+</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <span class="setting-label">显示提示</span>
+        <div class="toggle-row">
+          <span class="toggle-label" id="hintStatusLabel">开启</span>
+          <button class="toggle-switch active" id="hintToggle" onclick="toggleHints()">
+            <span class="toggle-knob"></span>
+          </button>
         </div>
       </div>
       <button class="start-btn anim-3" onclick="startQuiz()">开始练习</button>
@@ -586,6 +627,7 @@ let state = {
   questionType: 'mixed',   // 'word' | 'phrase' | 'mixed' | 'word-unit' | 'phrase-unit'
   questionCount: 10,
   selectedUnit: null,      // 2-5, only used for unit-based modes
+  showHints: true,         // show question type/unit labels and Chinese hints
   questions: [],          // selected question objects
   blanks: [],             // flat list of {qIndex, bIndex, answer, filled: null|'word', correct: null|bool}
   wordBank: [],           // {word, used: bool} — all candidate words
@@ -621,7 +663,8 @@ function setType(type, btn) {
     // Show actual question count for the type (all units), disable adjustment
     const filterType = type === 'word-unit' ? 'word' : 'phrase';
     const total = ALL_QUESTIONS.filter(q => q.type === filterType).length;
-    countDisplay.textContent = '—';
+    countDisplay.value = '';
+    countDisplay.readOnly = true;
     countMinus.style.opacity = '0.3'; countMinus.style.pointerEvents = 'none';
     countPlus.style.opacity = '0.3'; countPlus.style.pointerEvents = 'none';
     countLabel.textContent = '题目数量（选择单元后显示）';
@@ -629,11 +672,12 @@ function setType(type, btn) {
   } else {
     unitGroup.style.display = 'none';
     state.selectedUnit = null;
+    countDisplay.readOnly = false;
     countMinus.style.opacity = ''; countMinus.style.pointerEvents = '';
     countPlus.style.opacity = ''; countPlus.style.pointerEvents = '';
     countLabel.textContent = '题目数量';
     if (state.questionCount === 0) state.questionCount = 10;
-    countDisplay.textContent = state.questionCount;
+    countDisplay.value = state.questionCount;
   }
 }
 
@@ -646,8 +690,30 @@ function setUnit(unit, btn) {
   const filterType = state.questionType === 'word-unit' ? 'word' : 'phrase';
   const matching = ALL_QUESTIONS.filter(q => q.type === filterType && q.unit === unit);
   state.questionCount = matching.length;
-  document.getElementById('countDisplay').textContent = state.questionCount;
+  document.getElementById('countDisplay').value = state.questionCount;
   document.getElementById('countLabel').textContent = '题目数量（共 ' + state.questionCount + ' 题）';
+}
+
+function toggleHints() {
+  state.showHints = !state.showHints;
+  const btn = document.getElementById('hintToggle');
+  const label = document.getElementById('hintStatusLabel');
+  if (state.showHints) {
+    btn.classList.add('active');
+    label.textContent = '开启';
+  } else {
+    btn.classList.remove('active');
+    label.textContent = '关闭';
+  }
+}
+
+function onCountInput() {
+  const input = document.getElementById('countDisplay');
+  let val = parseInt(input.value, 10);
+  if (isNaN(val) || val < 5) val = 5;
+  if (val > 30) val = 30;
+  state.questionCount = val;
+  input.value = val;
 }
 
 function adjustCount(delta) {
@@ -656,7 +722,7 @@ function adjustCount(delta) {
   const newCount = state.questionCount + delta;
   if (newCount >= 5 && newCount <= 30) {
     state.questionCount = newCount;
-    document.getElementById('countDisplay').textContent = newCount;
+    document.getElementById('countDisplay').value = newCount;
   }
 }
 
@@ -796,12 +862,14 @@ function renderQuestions() {
       card.classList.add(allCorrect ? 'correct-card' : 'wrong-card');
     }
 
-    // Index label
-    const idxLabel = document.createElement('div');
-    idxLabel.className = 'q-index';
-    const typeLabel = q.type === 'word' ? '选词填空' : '短语填空';
-    idxLabel.textContent = `第 ${qi + 1} 题 · ${typeLabel} · Unit ${q.unit}`;
-    card.appendChild(idxLabel);
+    // Index label (hidden when hints are off)
+    if (state.showHints) {
+      const idxLabel = document.createElement('div');
+      idxLabel.className = 'q-index';
+      const typeLabel = q.type === 'word' ? '选词填空' : '短语填空';
+      idxLabel.textContent = `第 ${qi + 1} 题 · ${typeLabel} · Unit ${q.unit}`;
+      card.appendChild(idxLabel);
+    }
 
     // Sentence
     const sentenceDiv = document.createElement('div');
@@ -819,7 +887,7 @@ function renderQuestions() {
         slot.dataset.flatIdx = flatIdx;
         slot.dataset.qIndex = qi;
         slot.dataset.bIndex = blankIdx;
-        slot.title = blank.hint || '';
+        slot.title = state.showHints ? (blank.hint || '') : '';
 
         // Post-submit: add correct/wrong classes
         if (state.submitted && flatIdx >= 0 && state.blanks[flatIdx].correct !== null) {
@@ -860,8 +928,8 @@ function renderQuestions() {
 
     card.appendChild(sentenceDiv);
 
-    // Hint below sentence
-    if (q.blanks.length > 0 && q.blanks[0].hint) {
+    // Hint below sentence (only when hints are on)
+    if (state.showHints && q.blanks.length > 0 && q.blanks[0].hint) {
       const hintDiv = document.createElement('div');
       hintDiv.className = 'q-hint';
       hintDiv.textContent = q.blanks.map(b => b.hint).join(' + ');
