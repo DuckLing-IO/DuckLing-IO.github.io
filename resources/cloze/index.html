@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>英语选词填空 — DuckLing</title>
+<link rel="icon" type="image/jpeg" href="../../imgs/index/avatar.jpg">
+<style>
+/* ═══════════════════════════════════════════════════════ */
+/*                  Global & CSS Variables                */
+/* ═══════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+:root {
+  --bg: #08080a;
+  --text-primary: #f5f5f7;
+  --text-secondary: #98989d;
+  --text-tertiary: #636366;
+  --surface: #111114;
+  --surface-raised: #1a1a1e;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.14);
+  --radius: 28px;
+  --radius-sm: 14px;
+  --radius-xs: 10px;
+  --transition: 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-fast: 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --correct: #39d353;
+  --wrong: #f85149;
+  --accent: #f5f5f7;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "SF Mono", "Fira Code", "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/*                     Animations                         */
+/* ═══════════════════════════════════════════════════════ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+@keyframes slideDown {
+  from { opacity: 0; max-height: 0; transform: translateY(-8px); }
+  to   { opacity: 1; max-height: 400px; transform: translateY(0); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+.anim-1 { opacity: 0; animation: fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.05s forwards; }
+.anim-2 { opacity: 0; animation: fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.15s forwards; }
+.anim-3 { opacity: 0; animation: fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.25s forwards; }
+.anim-4 { opacity: 0; animation: fadeIn   0.6s cubic-bezier(0.16,1,0.3,1) 0.6s forwards; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*                       Layout                           */
+/* ═══════════════════════════════════════════════════════ */
+.main {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 860px;
+  margin: 0 auto; padding: 40px 32px 80px;
+  display: flex; flex-direction: column; gap: 32px;
+}
+
+/* ── Top Bar ── */
+.top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.back-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--text-secondary); text-decoration: none;
+  font-size: 0.9rem; font-weight: 500;
+  transition: color var(--transition);
+}
+.back-link:hover { color: var(--text-primary); }
+.back-link svg { width: 16px; height: 16px; transition: transform var(--transition); }
+.back-link:hover svg { transform: translateX(-3px); }
+
+.page-title {
+  font-size: 1.2rem; font-weight: 600;
+  letter-spacing: -0.01em;
+  position: absolute; left: 50%; transform: translateX(-50%);
+}
+
+.settings-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border-radius: 100px;
+  font-size: 0.88rem; font-weight: 500; font-family: inherit;
+  color: var(--text-secondary); background: transparent;
+  border: 1px solid var(--border); cursor: pointer;
+  transition: all var(--transition);
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.settings-toggle:hover {
+  color: var(--text-primary); border-color: var(--border-hover);
+  background: rgba(255,255,255,0.04);
+}
+.settings-toggle svg { width: 16px; height: 16px; }
+
+/* ── Settings Panel ── */
+.settings-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  display: none;
+}
+.settings-panel.open { display: block; animation: slideDown 0.35s cubic-bezier(0.16,1,0.3,1) forwards; }
+.settings-inner { padding: 28px 32px; display: flex; flex-direction: column; gap: 24px; }
+
+.setting-group { display: flex; flex-direction: column; gap: 10px; }
+.setting-label {
+  font-size: 0.8rem; font-weight: 500; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.type-options { display: flex; gap: 10px; flex-wrap: wrap; }
+.type-btn {
+  padding: 10px 22px; border-radius: 100px;
+  font-size: 0.9rem; font-weight: 500; font-family: inherit;
+  color: var(--text-secondary); background: transparent;
+  border: 1px solid var(--border); cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.type-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.type-btn.active {
+  color: var(--bg); background: var(--accent); border-color: var(--accent);
+}
+
+.count-row { display: flex; align-items: center; gap: 12px; }
+.count-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-secondary); font-size: 1.2rem; font-family: inherit;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.count-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.count-btn:active { background: rgba(255,255,255,0.06); }
+.count-display {
+  font-size: 1.5rem; font-weight: 600; font-family: var(--font-mono);
+  color: var(--text-primary); min-width: 48px; text-align: center;
+}
+
+.start-btn {
+  align-self: flex-start;
+  padding: 12px 32px; border-radius: 100px;
+  font-size: 0.95rem; font-weight: 600; font-family: inherit;
+  color: var(--bg); background: var(--accent);
+  border: none; cursor: pointer;
+  transition: all var(--transition);
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.start-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.start-btn:active { transform: scale(0.97); }
+
+/* ── Score Bar (after submit) ── */
+.score-bar {
+  display: none; align-items: center; gap: 12px;
+  padding: 16px 24px; border-radius: var(--radius-xs);
+  background: var(--surface); border: 1px solid var(--border);
+}
+.score-bar.visible { display: flex; }
+.score-text { font-size: 1.1rem; font-weight: 600; }
+.score-text.perfect { color: var(--correct); }
+.score-text.good { color: #f0c040; }
+.score-text.ok { color: var(--wrong); }
+
+/* ═══════════════════════════════════════════════════════ */
+/*                    Word Bank                           */
+/* ═══════════════════════════════════════════════════════ */
+.word-bank-section { display: none; }
+.word-bank-section.visible { display: block; }
+
+.word-bank-label {
+  font-size: 0.78rem; font-weight: 500; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;
+}
+.word-bank {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  padding: 20px 24px; border-radius: var(--radius-sm);
+  background: var(--surface); border: 1px solid var(--border);
+  min-height: 60px; align-items: center;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.word-bank.highlight {
+  border-color: rgba(255,255,255,0.2);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+.word-bank.empty-state {
+  justify-content: center;
+}
+.word-bank .empty-hint {
+  color: var(--text-tertiary); font-size: 0.85rem;
+  font-style: italic;
+}
+
+.chip {
+  display: inline-flex; align-items: center;
+  padding: 9px 18px; border-radius: 100px;
+  font-size: 0.92rem; font-weight: 500; font-family: var(--font);
+  color: var(--text-primary); background: var(--surface-raised);
+  border: 1px solid var(--border); cursor: grab;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+  user-select: none; -webkit-user-drag: none;
+  touch-action: none;
+  white-space: nowrap;
+}
+.chip:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  transform: translateY(-1px);
+}
+.chip:active { cursor: grabbing; }
+.chip.dragging {
+  opacity: 0.4; transform: scale(0.95);
+}
+.chip.used { display: none; }
+
+/* ── Floating drag clone ── */
+.drag-clone {
+  position: fixed; z-index: 9999; pointer-events: none;
+  display: inline-flex; align-items: center;
+  padding: 10px 20px; border-radius: 100px;
+  font-size: 0.95rem; font-weight: 500; font-family: var(--font);
+  color: var(--text-primary); background: #222228;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  transform: translate(-50%, -50%) scale(1.08);
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/*                   Questions                            */
+/* ═══════════════════════════════════════════════════════ */
+.questions-section { display: none; }
+.questions-section.visible { display: block; }
+
+.question-list { display: flex; flex-direction: column; gap: 28px; }
+
+.question-card {
+  padding: 24px 28px; border-radius: var(--radius-sm);
+  background: var(--surface); border: 1px solid var(--border);
+  transition: border-color var(--transition-fast);
+}
+.question-card.correct-card { border-color: rgba(57,211,83,0.3); }
+.question-card.wrong-card { border-color: rgba(248,81,73,0.3); }
+
+.q-index {
+  font-size: 0.75rem; font-weight: 600; color: var(--text-tertiary);
+  letter-spacing: 0.06em; margin-bottom: 10px;
+}
+.q-sentence {
+  font-size: 1.08rem; line-height: 1.8; color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+
+/* ── Blank slot ── */
+.blank-slot {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 80px; height: 32px;
+  margin: 0 4px; vertical-align: middle;
+  border-bottom: 2px dashed var(--text-tertiary);
+  transition: all var(--transition-fast);
+  cursor: pointer; position: relative;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.blank-slot.drop-target {
+  border-bottom-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(255,255,255,0.1);
+  min-width: 100px;
+}
+.blank-slot.filled {
+  border-bottom-style: solid; border-bottom-color: var(--text-secondary);
+  cursor: pointer; min-width: auto; padding: 0 8px;
+}
+.blank-slot .filled-word {
+  font-weight: 600; color: var(--text-primary);
+  font-size: 1.02rem;
+}
+.blank-slot.correct-slot {
+  border-bottom-color: var(--correct);
+}
+.blank-slot.correct-slot .filled-word { color: var(--correct); }
+.blank-slot.wrong-slot {
+  border-bottom-color: var(--wrong);
+}
+.blank-slot.wrong-slot .filled-word {
+  color: var(--wrong); text-decoration: line-through;
+}
+.blank-answer-reveal {
+  display: none; font-size: 0.8rem; color: var(--correct);
+  font-weight: 500; margin-left: 4px;
+}
+.blank-answer-reveal.visible { display: inline; }
+
+/* ── Post-submit info ── */
+.q-translation {
+  display: none; margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 0.88rem; color: var(--text-secondary);
+  line-height: 1.6;
+}
+.q-translation.visible { display: block; animation: fadeIn 0.4s ease forwards; }
+.q-hint { display: none; font-size: 0.8rem; color: var(--text-tertiary); margin-top: 4px; }
+.q-hint.visible { display: block; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*                   Submit / Actions                     */
+/* ═══════════════════════════════════════════════════════ */
+.actions { display: none; justify-content: center; gap: 16px; }
+.actions.visible { display: flex; }
+
+.submit-btn, .restart-btn {
+  padding: 14px 40px; border-radius: 100px;
+  font-size: 1rem; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: all var(--transition);
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.submit-btn {
+  color: var(--bg); background: var(--accent); border: none;
+}
+.submit-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+.submit-btn:active:not(:disabled) { transform: scale(0.97); }
+.submit-btn:disabled {
+  opacity: 0.3; cursor: not-allowed;
+}
+.restart-btn {
+  color: var(--text-primary); background: transparent;
+  border: 1px solid var(--border);
+}
+.restart-btn:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.04); }
+.restart-btn:active { transform: scale(0.97); }
+
+/* ═══════════════════════════════════════════════════════ */
+/*                   Footer                               */
+/* ═══════════════════════════════════════════════════════ */
+.footer {
+  display: none; font-size: 0.8rem; color: var(--text-tertiary);
+  text-align: center; padding-top: 16px;
+}
+.footer.visible { display: block; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*                   Responsive                           */
+/* ═══════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .main { padding: 24px 16px 60px; gap: 24px; }
+  .page-title { position: static; transform: none; font-size: 1rem; }
+  .top-bar { justify-content: space-between; }
+  .settings-inner { padding: 20px 20px; }
+  .q-sentence { font-size: 0.98rem; line-height: 1.7; }
+  .question-card { padding: 18px 16px; }
+  .blank-slot { min-width: 60px; height: 28px; }
+  .word-bank { padding: 14px 16px; gap: 8px; }
+  .chip { padding: 7px 14px; font-size: 0.85rem; }
+  .type-options { gap: 6px; }
+  .type-btn { padding: 8px 16px; font-size: 0.82rem; }
+  .submit-btn, .restart-btn { padding: 12px 32px; font-size: 0.92rem; }
+}
+</style>
+</head>
+<body>
+
+<main class="main">
+
+  <!-- Top Bar -->
+  <div class="top-bar anim-1">
+    <a class="back-link" href="../index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Resources
+    </a>
+    <span class="page-title">英语选词填空</span>
+    <button class="settings-toggle" id="settingsToggle" onclick="toggleSettings()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      设置
+    </button>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-panel open anim-2" id="settingsPanel">
+    <div class="settings-inner">
+      <div class="setting-group">
+        <span class="setting-label">题目类型</span>
+        <div class="type-options" id="typeOptions">
+          <button class="type-btn active" data-type="mixed" onclick="setType('mixed', this)">混合模式</button>
+          <button class="type-btn" data-type="word" onclick="setType('word', this)">选词填空</button>
+          <button class="type-btn" data-type="phrase" onclick="setType('phrase', this)">短语填空</button>
+          <button class="type-btn" data-type="word-unit" onclick="setType('word-unit', this)">词汇按单元</button>
+          <button class="type-btn" data-type="phrase-unit" onclick="setType('phrase-unit', this)">短语按单元</button>
+        </div>
+      </div>
+      <div class="setting-group" id="unitGroup" style="display:none">
+        <span class="setting-label">选择单元</span>
+        <div class="type-options" id="unitOptions">
+          <button class="type-btn" data-unit="2" onclick="setUnit(2, this)">Unit 2</button>
+          <button class="type-btn" data-unit="3" onclick="setUnit(3, this)">Unit 3</button>
+          <button class="type-btn" data-unit="4" onclick="setUnit(4, this)">Unit 4</button>
+          <button class="type-btn" data-unit="5" onclick="setUnit(5, this)">Unit 5</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <span class="setting-label" id="countLabel">题目数量</span>
+        <div class="count-row">
+          <button class="count-btn" id="countMinus" onclick="adjustCount(-1)" aria-label="减少">−</button>
+          <span class="count-display" id="countDisplay">10</span>
+          <button class="count-btn" id="countPlus" onclick="adjustCount(1)" aria-label="增加">+</button>
+        </div>
+      </div>
+      <button class="start-btn anim-3" onclick="startQuiz()">开始练习</button>
+    </div>
+  </div>
+
+  <!-- Score Bar -->
+  <div class="score-bar" id="scoreBar">
+    <span class="score-text" id="scoreText"></span>
+  </div>
+
+  <!-- Word Bank -->
+  <div class="word-bank-section anim-2" id="wordBankSection">
+    <div class="word-bank-label">📦 候选词库 · 拖拽至空中</div>
+    <div class="word-bank" id="wordBank"></div>
+  </div>
+
+  <!-- Questions -->
+  <div class="questions-section anim-3" id="questionsSection">
+    <div class="question-list" id="questionList"></div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions anim-4" id="actions">
+    <button class="submit-btn" id="submitBtn" onclick="submitAnswers()">提交答案</button>
+    <button class="restart-btn" id="restartBtn" style="display:none" onclick="restartQuiz()">重新开始</button>
+  </div>
+
+  <footer class="footer anim-4" id="footer">
+    &copy; 2026 DuckLing
+  </footer>
+
+</main>
+
+<!-- Drag Clone (created dynamically) -->
+
+<script>
+/* ═══════════════════════════════════════════════════════ */
+/*                   Question Data                        */
+/* ═══════════════════════════════════════════════════════ */
+const ALL_QUESTIONS = [
+  // ── Unit 2 · 词汇选词填空 ──
+  {type:'word',unit:2,blanks:[{answer:'hamper',hint:'(v. 阻碍，妨碍)'}],sentenceParts:['To encourage innovation among employees, the company has canceled a number of regulations and procedures that may ',null,' creative ideas.'],translation:'为鼓励员工创新，公司取消了一系列可能阻碍创意想法产生的规章制度。'},
+  {type:'word',unit:2,blanks:[{answer:'dietary',hint:'(饮食的)'}],sentenceParts:['Chinese consumers embrace healthy lifestyles, and many are changing their ',null,' habits to further reduce the consumption of sugar.'],translation:'中国消费者崇尚健康的生活方式，许多人正在改变饮食习惯，以进一步减少糖分摄入。'},
+  {type:'word',unit:2,blanks:[{answer:'corrode',hint:'(腐蚀，破坏)'}],sentenceParts:['If a couple treat each other with trust, respect, and honesty, nothing can make the bond of their marriage ',null,'.'],translation:'如果夫妻之间彼此信任、尊重、坦诚相待，没有什么能够破坏他们的婚姻关系。'},
+  {type:'word',unit:2,blanks:[{answer:'prefaces',hint:'(以……为开篇，作序言)'}],sentenceParts:['The professor usually ',null,' his lecture by providing some interesting background information, which helps students better understand the subject.'],translation:'这位教授通常会以一些有趣的背景资料开篇授课，帮助学生更好地理解课程内容。'},
+  {type:'word',unit:2,blanks:[{answer:'elicits',hint:'(引出，唤发)'}],sentenceParts:['Humorous and good at telling jokes, he ',null,' laughter and applause from the audience whenever he is on the stage.'],translation:'他风趣幽默、擅长讲笑话，每次登台都能引得台下观众阵阵欢笑与掌声。'},
+  {type:'word',unit:2,blanks:[{answer:'interwoven',hint:'(交织的，紧密结合的)'}],sentenceParts:['Technology is ',null,' with many things we do today, making our lives far more convenient and efficient than before.'],translation:'如今，科技与我们日常生活中的诸多事物深度交织，让我们的生活比以往更加便捷高效。'},
+  {type:'word',unit:2,blanks:[{answer:'knit',hint:'(v. 编织，联结)'}],sentenceParts:['The railroad, which was about 2,000 kilometers long, ',null,' the whole country together and made its rapid industrialization possible.'],translation:'这条全长约2000公里的铁路，将整个国家紧密联结在一起，推动国家快速实现工业化。'},
+  {type:'word',unit:2,blanks:[{answer:'collides',hint:'(碰撞，冲突)'}],sentenceParts:['The novel tells the story of a young man who struggles hard to accomplish his dreams that ',null,' with reality.'],translation:'这部小说讲述了一位年轻人竭力追梦、与现实相抗争的故事。'},
+  {type:'word',unit:2,blanks:[{answer:'costume',hint:'(n. 服饰，戏服)'}],sentenceParts:['What attracted me most in the museum was a stone sculpture of an ancient warrior in a(n) ',null,', complete with helmet, sword, and shield.'],translation:'博物馆里最吸引我的，是一尊古代武士石雕，武士身着全套服饰，配有头盔、佩剑与盾牌。'},
+  {type:'word',unit:2,blanks:[{answer:'authentic',hint:'(真实的，原汁原味的)'}],sentenceParts:['He fully researched the history of European immigration to North America to write a(n) ',null,' account of immigrant life.'],translation:'他深入研究了欧洲人移民北美的历史，撰写了一篇关于移民生活的真实纪实报道。'},
+  // ── Unit 3 · 词汇选词填空 ──
+  {type:'word',unit:3,blanks:[{answer:'clarity',hint:'(清晰，明朗)'}],sentenceParts:['During the discussion, the professor was mostly listening and only occasionally gave a few remarks to bring ',null,' to the issue being discussed.'],translation:'讨论期间，教授大多在倾听，仅偶尔发表几句评论，让讨论的问题清晰明了。'},
+  {type:'word',unit:3,blanks:[{answer:'keen',hint:'(热衷的，渴望的)'}],sentenceParts:['Today many governments around the world are ',null,' to invest in technology to tackle social and environmental problems.'],translation:'如今全球许多政府都热衷于投资科技，以解决社会与环境问题。'},
+  {type:'word',unit:3,blanks:[{answer:'venue',hint:'(场地，举办地)'}],sentenceParts:['Situated in the heart of the town, the hotel is an ideal ',null,' for business meetings, weddings, and other large group events.'],translation:'这家酒店位于镇中心，是举办商务会议、婚礼及其他大型集体活动的理想场地。'},
+  {type:'word',unit:3,blanks:[{answer:'showcase',hint:'(展示，展现)'}],sentenceParts:['For small businesses, online videos are a great way to ',null,' their products or services to new and existing customers.'],translation:'对小企业而言，网络视频是向新老客户展示产品或服务的绝佳方式。'},
+  {type:'word',unit:3,blanks:[{answer:'emergence',hint:'(出现，兴起)'}],sentenceParts:['The ',null,' and rapid growth of e-commerce has reshaped the way business is conducted, making online shopping an integral part of our life.'],translation:'电子商务的兴起与快速发展重塑了商业运作模式，让网购成为我们生活中不可或缺的一部分。'},
+  {type:'word',unit:3,blanks:[{answer:'allocation',hint:'(分配，拨款)'}],sentenceParts:['The new kindergarten will get a generous ',null,' of funds to improve its outdoor facilities.'],translation:'这所新建幼儿园将获得一笔可观的拨款，用于改善户外设施。'},
+  {type:'word',unit:3,blanks:[{answer:'clash',hint:'(冲突，抵触)'}],sentenceParts:['His job involves deciding on matters with different objectives that often ',null,' with each other, e.g., company profits vs. investor returns.'],translation:'他的工作需要处理目标时常相互冲突的事务，例如公司利润与投资者回报之间的矛盾。'},
+  {type:'word',unit:3,blanks:[{answer:'analogous',hint:'(相似的，类似的)'}],sentenceParts:['The structures of the wings of a bird and a butterfly are ',null,' because they are basically similar in shape and function.'],translation:'鸟类与蝴蝶的翅膀结构相似，二者在外形和功能上基本一致。'},
+  {type:'word',unit:3,blanks:[{answer:'momentum',hint:'(势头，动力)'}],sentenceParts:['Despite challenges, the Chinese economy continues to enjoy strong ',null,' and remains a crucial contributor to world economic growth.'],translation:'尽管面临挑战，中国经济仍保持强劲发展势头，持续为世界经济增长作出重要贡献。'},
+  {type:'word',unit:3,blanks:[{answer:'navigating',hint:'(应对，引领)'}],sentenceParts:["As the company's first CFO for many years, Bob has played a leading role in ",null,' the company through a significant growth period.'],translation:'作为公司多年来的首位首席财务官，鲍勃在引领公司度过重要发展阶段中发挥了核心作用。'},
+  // ── Unit 4 · 词汇选词填空 ──
+  {type:'word',unit:4,blanks:[{answer:'integrity',hint:'(完整性，完好)'}],sentenceParts:['During the restoration, there were many strict conservation guidelines to which we had to adhere in order to maintain the ',null,' of the building.'],translation:'修复期间，我们必须遵守多项严格的保护准则，以维持建筑的完整性。'},
+  {type:'word',unit:4,blanks:[{answer:'timely',hint:'(及时的)'}],sentenceParts:["Research indicates that a nurse's ",null,' response to a call bell communicates respect and caring and hence contributes to patient satisfaction.'],translation:'研究表明，护士及时响应呼叫铃能传递尊重与关怀，从而提升患者满意度。'},
+  {type:'word',unit:4,blanks:[{answer:'habitats',hint:'(栖息地)'}],sentenceParts:['The air and rivers in this area are getting cleaner, and attempts to preserve animal species and their ',null,' have been mostly successful.'],translation:'该地区的空气与河流愈发洁净，保护动物物种及其栖息地的举措基本取得了成功。'},
+  {type:'word',unit:4,blanks:[{answer:'consumed',hint:'(消耗，消费)'}],sentenceParts:['This project has ',null,' so much of her time and energy that she needs a rest after finishing it.'],translation:'这个项目耗费了她大量时间与精力，完成后需要休息。'},
+  {type:'word',unit:4,blanks:[{answer:'affluence',hint:'(富裕，富足)'}],sentenceParts:['Due to rising ',null,' and the availability of a wider range of choices, consumption is now based more on what one wants, rather than what one needs.'],translation:'随着生活富足、选择愈发多样，如今消费更多源于个人欲望，而非实际需求。'},
+  {type:'word',unit:4,blanks:[{answer:'disposal',hint:'(处理，处置)'}],sentenceParts:['Improper ',null,' of plastics into the oceans endangers the marine species and subsequently human lives.'],translation:'对海洋不当处置塑料会危及海洋生物，进而威胁人类生命。'},
+  {type:'word',unit:4,blanks:[{answer:'collapsed',hint:'(崩溃，瘫痪)'}],sentenceParts:['The movement of trains along the line was badly affected after the signaling system ',null,' following a heavy rainstorm.'],translation:'暴雨导致信号系统瘫痪，沿线列车运行受到严重影响。'},
+  {type:'word',unit:4,blanks:[{answer:'depletion',hint:'(耗尽，枯竭)'}],sentenceParts:['The ',null,' of natural resources is a global environmental issue that jeopardizes the livelihoods of billions of people on our planet.'],translation:'自然资源枯竭是全球性环境问题，危及全球数十亿人的生计。'},
+  {type:'word',unit:4,blanks:[{answer:'perish',hint:'(消亡，灭绝)'}],sentenceParts:['Insects are important sources of food for other animals. Hundreds of species of birds would ',null,' if there were no insects to feed on.'],translation:'昆虫是其他动物的重要食物来源，若没有昆虫可供捕食，数百种鸟类将会灭绝。'},
+  {type:'word',unit:4,blanks:[{answer:'monumental',hint:'(重大的，不朽的)'}],sentenceParts:['Scientists in China have carried out advanced research on hydrology and water resources of inland rivers, and have made ',null,' achievements in recent years.'],translation:'中国科学家针对内陆河流水文学与水资源开展深入研究，近年取得了重大成果。'},
+  // ── Unit 5 · 词汇选词填空 ──
+  {type:'word',unit:5,blanks:[{answer:'expectancy',hint:'(预期，寿命)'}],sentenceParts:['The average life ',null,' in developing countries has risen rapidly due to improvements in nutrition, medicine, and public health.'],translation:'由于营养、医疗与公共卫生条件的改善，发展中国家的人均预期寿命迅速延长。'},
+  {type:'word',unit:5,blanks:[{answer:'stalked',hint:'(跟踪，悄悄靠近)'}],sentenceParts:['Jonathan found himself lying on a bench in the park after waking up from a long dream in which a fierce animal ',null,' him in darkness.'],translation:'乔纳森从一场漫长的梦中醒来，发现自己躺在公园长椅上，梦里有一只凶猛的野兽在黑暗中跟踪他。'},
+  {type:'word',unit:5,blanks:[{answer:'intrigued',hint:'(使着迷)'}],sentenceParts:["Up until that time, I hadn't thought much about classical music; instead, what really ",null,' me were pop songs.'],translation:'在那之前我对古典音乐兴趣不大，真正吸引我的是流行歌曲。'},
+  {type:'word',unit:5,blanks:[{answer:'vaccinate',hint:'(接种疫苗)'}],sentenceParts:['Some deadly diseases have been virtually eliminated thanks to the dedicated efforts to ',null," the world's population."],translation:'得益于为全球民众接种疫苗的不懈努力，一些致命疾病几乎被根除。'},
+  {type:'word',unit:5,blanks:[{answer:'malpractice',hint:'(医疗事故)'}],sentenceParts:['Research shows that medical ',null,' can be effectively prevented when doctors abide by professional regulations strictly.'],translation:'研究表明，医生严格遵守行业规范，能够有效预防医疗事故。'},
+  {type:'word',unit:5,blanks:[{answer:'chronicles',hint:'(记述，记载)'}],sentenceParts:['Consisting of three episodes, the documentary ',null," China's dramatic economic and social development in the last century."],translation:'这部三集纪录片记述了中国上世纪波澜壮阔的经济与社会发展历程。'},
+  {type:'word',unit:5,blanks:[{answer:'successor',hint:'(继任者，接班人)'}],sentenceParts:['He is planning to retire as executive director of the organization in a few months, but he has agreed to stay on until a(n) ',null,' is appointed.'],translation:'他计划数月后辞去该组织执行董事一职，但同意留任直至继任者上任。'},
+  {type:'word',unit:5,blanks:[{answer:'constricts',hint:'(限制，束缚)'}],sentenceParts:["The clothing you wear to the gym shouldn't be too tight because you don't want to work out in something that ",null,' your movements.'],translation:'健身服不宜过紧，不要穿会束缚活动的衣物运动。'},
+  {type:'word',unit:5,blanks:[{answer:'incur',hint:'(招致，引发)'}],sentenceParts:['The company decided to redesign the advertisement after realizing that it might ',null,' criticism from consumers.'],translation:'公司意识到这则广告可能招致消费者批评，决定重新设计。'},
+  {type:'word',unit:5,blanks:[{answer:'sympathy',hint:'(同情)'}],sentenceParts:["After hearing about the family's difficulties, all the neighbors felt great ",null,' and offered to help in whatever way they could.'],translation:'得知这家人的困境后，邻居们都深表同情，并主动提供力所能及的帮助。'},
+  // ── Unit 2 · 短语填空 ──
+  {type:'phrase',unit:2,blanks:[{answer:'enquired about',hint:'(打听，询问)'}],sentenceParts:['In his response to the job offer from the company, he ',null,' healthcare benefits available to full-time employees to make a final decision.'],translation:'在回复公司的录用通知时，他询问了全职员工可享受的医疗福利，以便做出最终决定。'},
+  {type:'phrase',unit:2,blanks:[{answer:'stumbling through',hint:'(跌跌撞撞地走过)'}],sentenceParts:['They got lost while hiking in the mountain, spending many hours ',null,' the dense forest before finding their way back to the trail.'],translation:'他们在山里徒步时迷路了，跌跌撞撞穿行在茂密的森林中数小时，才找到返回步道的路。'},
+  {type:'phrase',unit:2,blanks:[{answer:'seek out',hint:'(寻找，发掘)'}],sentenceParts:['Wherever you go for college and whatever major you pursue, you should actively ',null,' new opportunities and experiences to enrich your learning.'],translation:'无论你去哪所大学，选择什么专业，都应该主动发掘新的机会与经历，丰富自己的学识。'},
+  {type:'phrase',unit:2,blanks:[{answer:'are accountable to',hint:'(对……负责)'}],sentenceParts:['As part of an ecosystem that contains numerous living species, we human beings ',null,' not only ourselves but also other species that share the same planet.'],translation:'作为位于众多生物的生态系统的一员，人类不仅要对自己负责，更要对同一个星球的其他物种负责。'},
+  {type:'phrase',unit:2,blanks:[{answer:'wore out',hint:'(磨损，殆尽)'}],sentenceParts:['Raised in a family where being frugal was a virtue, we never got rid of anything we had until it completely ',null,'.'],translation:'在以节俭为美德的家庭中长大，我们从不会丢弃物品，直到它完全用坏、磨损。'},
+  {type:'phrase',unit:2,blanks:[{answer:'be exempt from',hint:'(被免除……)'}],sentenceParts:['According to the law, art museums are considered non-profit organizations and can ',null,' some taxes if they meet certain criteria.'],translation:'根据法律规定，艺术博物馆属于非营利组织，符合条件即可免缴部分税款。'},
+  {type:'phrase',unit:2,blanks:[{answer:'approve of',hint:'(赞成，认可)'}],sentenceParts:['Parents all ',null," and support the school's measures to lower academic pressure on kids and encourage their participation in outdoor activities."],translation:'家长们都赞同并支持学校为减轻孩子学业压力、鼓励参与户外活动而采取的措施。'},
+  {type:'phrase',unit:2,blanks:[{answer:'are addicted to',hint:'(对……上瘾)'}],sentenceParts:['Some people today ',null,' their mobile phones, even to the point that they become restless if they are not with their devices.'],translation:'如今有些人沉迷于手机，甚至一旦离开手机就会焦虑不安。'},
+  // ── Unit 3 · 短语填空 ──
+  {type:'phrase',unit:3,blanks:[{answer:'gained ground',hint:'(流行起来，取得进展)'}],sentenceParts:['Over the last decade, the trend toward working from home has slowly ',null,' across the country.'],translation:'过去十年，居家办公的趋势在全国范围内慢慢流行起来。'},
+  {type:'phrase',unit:3,blanks:[{answer:'hailed',hint:'(把……誉为①)'},{answer:'as',hint:'(把……誉为②)'}],sentenceParts:['Many students have ',null," the experience of participating in the summer camp ",null," life-changing and the best time they've ever had."],translation:'许多学生都将参加夏令营的经历誉为改变人生的经历，也是他们度过的最美好时光。'},
+  {type:'phrase',unit:3,blanks:[{answer:'put',hint:'(将……付诸实践①)'},{answer:'into practice',hint:'(将……付诸实践②)'}],sentenceParts:['These workshops provide students with opportunities to experiment with different techniques and ',null,' what they have learned ',null,' in a supportive environment.'],translation:'这些研讨班为学生提供机会，尝试不同技巧，并在良好的环境中将所学知识付诸实践。'},
+  {type:'phrase',unit:3,blanks:[{answer:'brought',hint:'(使……焕发生机①)'},{answer:'to life',hint:'(使……焕发生机②)'}],sentenceParts:['The artist restored the painting and ',null,' it ',null,', revealing the fine colors of the rainbow, which were lost beneath layers of dirt.'],translation:'艺术家修复了这幅画，使其重焕生机，展现出被层层污垢遮盖的绚烂彩虹色彩。'},
+  {type:'phrase',unit:3,blanks:[{answer:'are conducive to',hint:'(有利于，有益于)'}],sentenceParts:['When students are exposed to environments that ',null,' learning, the chances of achieving their educational goals increase.'],translation:'当学生身处有利于学习的环境中时，实现学业目标的几率会提高。'},
+  {type:'phrase',unit:3,blanks:[{answer:'reflect on',hint:'(反思，思考)'}],sentenceParts:['We should be open to new ways of thinking, ',null,' what we do, and strive to improve ourselves on the basis of our experience.'],translation:'我们应该秉持开放的思维方式，反思自身所为，并基于经验努力提升自我。'},
+  {type:'phrase',unit:3,blanks:[{answer:'drew to a close',hint:'(渐近结束)'}],sentenceParts:['Several hours later, the budget meeting ',null,' and the board members filed out of the room.'],translation:'数小时后，预算会议渐近结束，董事会成员陆续离场。'},
+  {type:'phrase',unit:3,blanks:[{answer:'be traced back to',hint:'(追溯到……)'}],sentenceParts:['Some research suggests that the history of the Mid-Autumn Festival can ',null,' more than 3,000 years ago.'],translation:'有研究表明，中秋节的历史可以追溯到三千多年前。'},
+  // ── Unit 4 · 短语填空 ──
+  {type:'phrase',unit:4,blanks:[{answer:'comply with',hint:'(遵守，符合)'}],sentenceParts:['If the goods do not ',null,' the contract specifications, the buyer can request several different kinds of compensation.'],translation:'如果货物不符合合同规格，买方可以要求多种赔偿。'},
+  {type:'phrase',unit:4,blanks:[{answer:'fared no better',hint:'(情况并不更好)'}],sentenceParts:['The company tried to release an improved milk chocolate bar using condensed milk rather than powdered milk, but it ',null,' than the previous products.'],translation:'公司尝试推出用炼乳而非奶粉制作的改良牛奶巧克力，但效果和之前的产品并无改善。'},
+  {type:'phrase',unit:4,blanks:[{answer:'cut down on',hint:'(减少)'}],sentenceParts:['For the sake of health, we should ',null,' the intake of high-calorie and high-fat foods with poor nutritional value.'],translation:'为了健康，我们应该减少摄入营养价值低的高热量、高脂肪食物。'},
+  {type:'phrase',unit:4,blanks:[{answer:'pose a threat to',hint:'(威胁)'}],sentenceParts:['Wastewater and the increasing atmospheric CO2 levels are two great environmental challenges that ',null,' human life.'],translation:'废水与大气二氧化碳浓度上升是两大环境难题，威胁着人类的生命。'},
+  {type:'phrase',unit:4,blanks:[{answer:'bear no links to',hint:'(与……无关联)'}],sentenceParts:['The recent oil price rise was found to ',null,' the changes in supply and demand, but came as a result of uncertainty about the market.'],translation:'近期油价上涨被发现与供需变化无关，而是源于市场的不确定性。'},
+  {type:'phrase',unit:4,blanks:[{answer:'be weighed against',hint:'(权衡)'}],sentenceParts:['Most experts agreed that the cost of conducting the experiment must ',null,' the potential benefit to society the research might provide.'],translation:'大多数专家认为，开展实验的成本必须与研究可能带来的社会潜在效益进行权衡。'},
+  {type:'phrase',unit:4,blanks:[{answer:'economize on',hint:'(节约，节省)'}],sentenceParts:['In order to ',null,' natural resources and minimize waste disposal, it is necessary for everyone to get into the habit of recycling.'],translation:'为节约自然资源、减少垃圾排放，每个人都必须养成回收利用的习惯。'},
+  {type:'phrase',unit:4,blanks:[{answer:'be in jeopardy',hint:'(处于危险中)'}],sentenceParts:['Many phishing emails try to deceive you with the threat that your account will ',null,' if it is not updated right away.'],translation:'许多钓鱼邮件试图以账户若不立即更新就会陷入风险为由进行诈骗。'},
+  // ── Unit 5 · 短语填空 ──
+  {type:'phrase',unit:5,blanks:[{answer:'stood on the sidelines',hint:'(袖手旁观)'}],sentenceParts:['Compassionate and caring, he never ',null,' when the vulnerable groups needed help, and he made a difference!'],translation:'他富有同情心、乐于助人，弱势群体需要帮助时，他从不袖手旁观，并切实做出了改变。'},
+  {type:'phrase',unit:5,blanks:[{answer:'appealing to',hint:'(呼吁)'}],sentenceParts:['The international meeting released a joint statement ',null,' all countries in the world to work together to tackle global issues like poverty and climate change.'],translation:'此次国际会议发布联合声明，呼吁世界各国携手应对贫困、气候变化等全球性问题。'},
+  {type:'phrase',unit:5,blanks:[{answer:'turned up',hint:'(出现，露面)'}],sentenceParts:["We didn't expect that such a small art show would attract many visitors, so it was quite a surprise that more than a hundred people ",null,' in the gallery.'],translation:'我们没料到这场小型艺术展能吸引众多参观者，因此一百多人现身画廊着实令人意外。'},
+  {type:'phrase',unit:5,blanks:[{answer:'lay siege to',hint:'(围攻)'}],sentenceParts:['A common theme in science fiction films is that aliens ',null,' the earth and then their attempt is defeated by humans using less advanced technology.'],translation:'科幻电影的常见主题是外星人围攻地球，最终其进攻被人类用相对落后的技术击退。'},
+  {type:'phrase',unit:5,blanks:[{answer:'following suit',hint:'(效仿，跟着做)'}],sentenceParts:['China and some other countries have committed to net zero emissions of greenhouse gases by mid-century, and many more are ',null,'.'],translation:'中国及其他部分国家承诺在本世纪中叶实现温室气体净零排放，越来越多国家正效仿跟进。'},
+  {type:'phrase',unit:5,blanks:[{answer:'be alerted to',hint:'(使……意识到)'}],sentenceParts:['With the improvement of smart safety features of modern cars, road accidents are expected to decrease as drivers can ',null,' potential dangers or bad traffic conditions.'],translation:'随着现代汽车智能安全功能升级，驾驶员能够提前察觉潜在危险与不良路况，道路交通事故有望减少。'},
+  {type:'phrase',unit:5,blanks:[{answer:'put out',hint:'(发布)'}],sentenceParts:['To help residents prepare for the predicted snowstorm, the local weather bureau ',null,' early warnings and provided updates through various channels.'],translation:'为帮助居民应对即将到来的暴风雪，当地气象局发布预警，并通过多渠道更新信息。'}
+];
+
+/* ═══════════════════════════════════════════════════════ */
+/*                   App State                            */
+/* ═══════════════════════════════════════════════════════ */
+let state = {
+  questionType: 'mixed',   // 'word' | 'phrase' | 'mixed' | 'word-unit' | 'phrase-unit'
+  questionCount: 10,
+  selectedUnit: null,      // 2-5, only used for unit-based modes
+  questions: [],          // selected question objects
+  blanks: [],             // flat list of {qIndex, bIndex, answer, filled: null|'word', correct: null|bool}
+  wordBank: [],           // {word, used: bool} — all candidate words
+  submitted: false,
+  dragInfo: null          // {word, sourceEl, cloneEl, startX, startY}
+};
+
+/* ═══════════════════════════════════════════════════════ */
+/*                   Settings                             */
+/* ═══════════════════════════════════════════════════════ */
+function toggleSettings() {
+  const panel = document.getElementById('settingsPanel');
+  panel.classList.toggle('open');
+}
+
+function setType(type, btn) {
+  state.questionType = type;
+  document.querySelectorAll('#typeOptions .type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const isUnitMode = (type === 'word-unit' || type === 'phrase-unit');
+  const unitGroup = document.getElementById('unitGroup');
+  const countMinus = document.getElementById('countMinus');
+  const countPlus = document.getElementById('countPlus');
+  const countDisplay = document.getElementById('countDisplay');
+  const countLabel = document.getElementById('countLabel');
+
+  if (isUnitMode) {
+    unitGroup.style.display = '';
+    // Reset unit selection
+    state.selectedUnit = null;
+    document.querySelectorAll('#unitOptions .type-btn').forEach(b => b.classList.remove('active'));
+    // Show actual question count for the type (all units), disable adjustment
+    const filterType = type === 'word-unit' ? 'word' : 'phrase';
+    const total = ALL_QUESTIONS.filter(q => q.type === filterType).length;
+    countDisplay.textContent = '—';
+    countMinus.style.opacity = '0.3'; countMinus.style.pointerEvents = 'none';
+    countPlus.style.opacity = '0.3'; countPlus.style.pointerEvents = 'none';
+    countLabel.textContent = '题目数量（选择单元后显示）';
+    state.questionCount = 0;
+  } else {
+    unitGroup.style.display = 'none';
+    state.selectedUnit = null;
+    countMinus.style.opacity = ''; countMinus.style.pointerEvents = '';
+    countPlus.style.opacity = ''; countPlus.style.pointerEvents = '';
+    countLabel.textContent = '题目数量';
+    if (state.questionCount === 0) state.questionCount = 10;
+    countDisplay.textContent = state.questionCount;
+  }
+}
+
+function setUnit(unit, btn) {
+  state.selectedUnit = unit;
+  document.querySelectorAll('#unitOptions .type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Compute actual question count for this type + unit
+  const filterType = state.questionType === 'word-unit' ? 'word' : 'phrase';
+  const matching = ALL_QUESTIONS.filter(q => q.type === filterType && q.unit === unit);
+  state.questionCount = matching.length;
+  document.getElementById('countDisplay').textContent = state.questionCount;
+  document.getElementById('countLabel').textContent = '题目数量（共 ' + state.questionCount + ' 题）';
+}
+
+function adjustCount(delta) {
+  // Disabled for unit-based modes
+  if (state.questionType === 'word-unit' || state.questionType === 'phrase-unit') return;
+  const newCount = state.questionCount + delta;
+  if (newCount >= 5 && newCount <= 30) {
+    state.questionCount = newCount;
+    document.getElementById('countDisplay').textContent = newCount;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/*                   Start Quiz                           */
+/* ═══════════════════════════════════════════════════════ */
+function startQuiz() {
+  // Reset state
+  state.submitted = false;
+  state.dragInfo = null;
+
+  // Validate unit selection for unit-based modes
+  if ((state.questionType === 'word-unit' || state.questionType === 'phrase-unit') && !state.selectedUnit) {
+    alert('请先选择一个单元');
+    return;
+  }
+  if (state.questionCount === 0) {
+    alert('该模式下没有可用题目，请切换模式');
+    return;
+  }
+
+  // Filter questions by type (and unit if applicable)
+  let pool = ALL_QUESTIONS;
+  if (state.questionType === 'word') {
+    pool = ALL_QUESTIONS.filter(q => q.type === 'word');
+  } else if (state.questionType === 'phrase') {
+    pool = ALL_QUESTIONS.filter(q => q.type === 'phrase');
+  } else if (state.questionType === 'word-unit') {
+    pool = ALL_QUESTIONS.filter(q => q.type === 'word' && q.unit === state.selectedUnit);
+  } else if (state.questionType === 'phrase-unit') {
+    pool = ALL_QUESTIONS.filter(q => q.type === 'phrase' && q.unit === state.selectedUnit);
+  }
+
+  // For unit-based modes, show ALL questions (no shuffle-to-limit)
+  if (state.questionType === 'word-unit' || state.questionType === 'phrase-unit') {
+    state.questions = [...pool];
+    state.questionCount = state.questions.length;
+  } else {
+
+  // Shuffle and pick
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  state.questions = shuffled.slice(0, Math.min(state.questionCount, shuffled.length));
+  state.questionCount = state.questions.length;
+  }
+
+  // Build flat blanks list
+  state.blanks = [];
+  state.questions.forEach((q, qi) => {
+    q.blanks.forEach((b, bi) => {
+      state.blanks.push({ qIndex: qi, bIndex: bi, answer: b.answer, filled: null, correct: null });
+    });
+  });
+
+  // Build word bank: all correct answers + extra distractors
+  const correctWords = state.blanks.map(b => b.answer);
+  // Collect distractors from pool (not in current questions)
+  const usedIds = new Set(state.questions.map(q => q.blanks.map(b => b.answer).join('|')).join('|'));
+  const distractorPool = [];
+  pool.forEach(q => {
+    q.blanks.forEach(b => {
+      if (!correctWords.includes(b.answer)) {
+        distractorPool.push(b.answer);
+      }
+    });
+  });
+  // Shuffle and pick ~30% extra
+  const extraCount = Math.max(2, Math.floor(state.blanks.length * 0.35));
+  const shuffledDistractors = [...distractorPool].sort(() => Math.random() - 0.5);
+  const distractors = shuffledDistractors.slice(0, extraCount);
+
+  // Combine and shuffle word bank (deduplicate first)
+  const allWords = [...new Set([...correctWords, ...distractors])].sort(() => Math.random() - 0.5);
+  state.wordBank = allWords.map(w => ({ word: w, used: false }));
+
+  // Collapse settings panel
+  document.getElementById('settingsPanel').classList.remove('open');
+
+  // Hide score bar
+  document.getElementById('scoreBar').classList.remove('visible');
+
+  // Render
+  renderWordBank();
+  renderQuestions();
+  renderActions();
+
+  // Show sections
+  document.getElementById('wordBankSection').classList.add('visible');
+  document.getElementById('questionsSection').classList.add('visible');
+  document.getElementById('actions').classList.add('visible');
+  document.getElementById('footer').classList.add('visible');
+
+  // Scroll to questions
+  document.getElementById('questionsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/*                   Render Word Bank                     */
+/* ═══════════════════════════════════════════════════════ */
+function renderWordBank() {
+  const bank = document.getElementById('wordBank');
+  bank.innerHTML = '';
+
+  const availableWords = state.wordBank.filter(w => !w.used);
+  if (availableWords.length === 0) {
+    bank.classList.add('empty-state');
+    bank.innerHTML = '<span class="empty-hint">所有候选词已放置完毕</span>';
+    return;
+  }
+  bank.classList.remove('empty-state');
+
+  availableWords.forEach((item, idx) => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.textContent = item.word;
+    chip.dataset.word = item.word;
+    chip.dataset.bankIdx = state.wordBank.indexOf(item);
+    chip.addEventListener('pointerdown', onChipPointerDown);
+    bank.appendChild(chip);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/*                   Render Questions                     */
+/* ═══════════════════════════════════════════════════════ */
+function renderQuestions() {
+  const list = document.getElementById('questionList');
+  list.innerHTML = '';
+
+  state.questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.dataset.qIndex = qi;
+
+    // Post-submit: mark entire question card as correct/wrong
+    if (state.submitted) {
+      const blankStates = state.blanks.filter(b => b.qIndex === qi);
+      const allCorrect = blankStates.length > 0 && blankStates.every(b => b.correct === true);
+      card.classList.add(allCorrect ? 'correct-card' : 'wrong-card');
+    }
+
+    // Index label
+    const idxLabel = document.createElement('div');
+    idxLabel.className = 'q-index';
+    const typeLabel = q.type === 'word' ? '选词填空' : '短语填空';
+    idxLabel.textContent = `第 ${qi + 1} 题 · ${typeLabel} · Unit ${q.unit}`;
+    card.appendChild(idxLabel);
+
+    // Sentence
+    const sentenceDiv = document.createElement('div');
+    sentenceDiv.className = 'q-sentence';
+
+    q.sentenceParts.forEach((part, pi) => {
+      if (part === null) {
+        // Find which blank this is
+        const blankIdx = q.sentenceParts.slice(0, pi).filter(p => p === null).length;
+        const blank = q.blanks[blankIdx];
+        const flatIdx = state.blanks.findIndex(b => b.qIndex === qi && b.bIndex === blankIdx);
+
+        const slot = document.createElement('span');
+        slot.className = 'blank-slot';
+        slot.dataset.flatIdx = flatIdx;
+        slot.dataset.qIndex = qi;
+        slot.dataset.bIndex = blankIdx;
+        slot.title = blank.hint || '';
+
+        // Post-submit: add correct/wrong classes
+        if (state.submitted && flatIdx >= 0 && state.blanks[flatIdx].correct !== null) {
+          slot.classList.add(state.blanks[flatIdx].correct ? 'correct-slot' : 'wrong-slot');
+        }
+
+        if (flatIdx >= 0 && state.blanks[flatIdx].filled) {
+          slot.classList.add('filled');
+          const wordSpan = document.createElement('span');
+          wordSpan.className = 'filled-word';
+          wordSpan.textContent = state.blanks[flatIdx].filled;
+          slot.appendChild(wordSpan);
+          slot.addEventListener('click', () => returnWordToBank(flatIdx));
+        } else if (!state.submitted) {
+          slot.textContent = ' ';
+          slot.addEventListener('pointerup', onBlankPointerUp);
+        } else {
+          slot.textContent = ' ';
+        }
+
+        // Post-submit: show answer reveal
+        if (state.submitted && flatIdx >= 0) {
+          const reveal = document.createElement('span');
+          reveal.className = 'blank-answer-reveal';
+          reveal.textContent = ' ' + state.blanks[flatIdx].answer;
+          if (!state.blanks[flatIdx].filled || state.blanks[flatIdx].filled.toLowerCase().trim() !== state.blanks[flatIdx].answer.toLowerCase().trim()) {
+            reveal.classList.add('visible');
+          }
+          slot.appendChild(reveal);
+        }
+
+        sentenceDiv.appendChild(slot);
+      } else {
+        const textNode = document.createTextNode(part);
+        sentenceDiv.appendChild(textNode);
+      }
+    });
+
+    card.appendChild(sentenceDiv);
+
+    // Hint below sentence
+    if (q.blanks.length > 0 && q.blanks[0].hint) {
+      const hintDiv = document.createElement('div');
+      hintDiv.className = 'q-hint';
+      hintDiv.textContent = q.blanks.map(b => b.hint).join(' + ');
+      card.appendChild(hintDiv);
+    }
+
+    // Translation (hidden until submit)
+    const transDiv = document.createElement('div');
+    transDiv.className = 'q-translation';
+    transDiv.textContent = '💡 ' + q.translation;
+    if (state.submitted) transDiv.classList.add('visible');
+    card.appendChild(transDiv);
+
+    list.appendChild(card);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/*                   Render Actions                       */
+/* ═══════════════════════════════════════════════════════ */
+function renderActions() {
+  const submitBtn = document.getElementById('submitBtn');
+  const restartBtn = document.getElementById('restartBtn');
+
+  if (state.submitted) {
+    submitBtn.style.display = 'none';
+    restartBtn.style.display = '';
+  } else {
+    submitBtn.style.display = '';
+    restartBtn.style.display = 'none';
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════ */
+/*              Drag & Drop (Pointer Events)              */
+/* ═══════════════════════════════════════════════════════ */
+function onChipPointerDown(e) {
+  if (state.submitted) return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  const chip = e.currentTarget;
+  const word = chip.dataset.word;
+
+  // Create drag clone
+  const clone = document.createElement('div');
+  clone.className = 'drag-clone';
+  clone.textContent = word;
+  document.body.appendChild(clone);
+
+  // Position clone at cursor
+  const rect = chip.getBoundingClientRect();
+  clone.style.left = e.clientX + 'px';
+  clone.style.top = e.clientY + 'px';
+
+  // Mark chip as dragging
+  chip.classList.add('dragging');
+
+  state.dragInfo = {
+    word: word,
+    sourceEl: chip,
+    cloneEl: clone,
+    startX: e.clientX,
+    startY: e.clientY
+  };
+
+  // Add global listeners
+  window.addEventListener('pointermove', onPointerMove, { passive: false });
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
+
+  // Highlight blanks immediately
+  highlightBlanks(true);
+}
+
+function onPointerMove(e) {
+  if (!state.dragInfo) return;
+  e.preventDefault();
+
+  const clone = state.dragInfo.cloneEl;
+  clone.style.left = e.clientX + 'px';
+  clone.style.top = e.clientY + 'px';
+
+  // Check if hovering over a blank
+  const blankUnder = getBlankUnderPoint(e.clientX, e.clientY);
+  clearBlankHighlights();
+  if (blankUnder) {
+    blankUnder.classList.add('drop-target');
+  }
+}
+
+function onPointerUp(e) {
+  if (!state.dragInfo) return;
+
+  window.removeEventListener('pointermove', onPointerMove);
+  window.removeEventListener('pointerup', onPointerUp);
+  window.removeEventListener('pointercancel', onPointerUp);
+
+  const clone = state.dragInfo.cloneEl;
+  const word = state.dragInfo.word;
+
+  // Check if dropped on a blank
+  const blankUnder = getBlankUnderPoint(e.clientX, e.clientY);
+
+  if (blankUnder) {
+    const flatIdx = parseInt(blankUnder.dataset.flatIdx);
+    if (!isNaN(flatIdx)) {
+      // If blank already filled, return old word to bank first
+      if (state.blanks[flatIdx].filled) {
+        returnWordToBankSilent(flatIdx);
+      }
+      // Fill the blank
+      state.blanks[flatIdx].filled = word;
+      // Mark word bank item as used
+      const bankItem = state.wordBank.find(w => w.word === word);
+      if (bankItem) bankItem.used = true;
+    }
+  }
+
+  // Cleanup
+  state.dragInfo.sourceEl.classList.remove('dragging');
+  clone.remove();
+  state.dragInfo = null;
+
+  clearBlankHighlights();
+  highlightBlanks(false);
+
+  // Re-render
+  renderWordBank();
+  renderQuestions();
+}
+
+function getBlankUnderPoint(x, y) {
+  // Get all blank slots
+  const blanks = document.querySelectorAll('.blank-slot');
+  for (let i = blanks.length - 1; i >= 0; i--) {
+    const rect = blanks[i].getBoundingClientRect();
+    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+      // Only return empty blanks (or filled for swap)
+      return blanks[i];
+    }
+  }
+  return null;
+}
+
+function onBlankPointerUp(e) {
+  if (state.submitted) return;
+  // This is a click on an empty blank without dragging (do nothing for clicks)
+  // The actual drop is handled in the global pointerup
+}
+
+function highlightBlanks(on) {
+  if (on) {
+    document.getElementById('wordBank').classList.add('highlight');
+  } else {
+    document.getElementById('wordBank').classList.remove('highlight');
+  }
+}
+
+function clearBlankHighlights() {
+  document.querySelectorAll('.blank-slot.drop-target').forEach(b => {
+    b.classList.remove('drop-target');
+  });
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/*              Return Word to Bank                       */
+/* ═══════════════════════════════════════════════════════ */
+function returnWordToBank(flatIdx) {
+  if (state.submitted) return;
+  returnWordToBankSilent(flatIdx);
+  renderWordBank();
+  renderQuestions();
+}
+
+function returnWordToBankSilent(flatIdx) {
+  const blank = state.blanks[flatIdx];
+  if (!blank || !blank.filled) return;
+  const word = blank.filled;
+  blank.filled = null;
+  blank.correct = null;
+  // Return to bank
+  const bankItem = state.wordBank.find(w => w.word === word);
+  if (bankItem) bankItem.used = false;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/*              Submit & Grading                          */
+/* ═══════════════════════════════════════════════════════ */
+function submitAnswers() {
+  if (state.submitted) return;
+
+  // Grade each blank
+  let correctCount = 0;
+  state.blanks.forEach(b => {
+    const userAnswer = (b.filled || '').toLowerCase().trim();
+    const correctAnswer = b.answer.toLowerCase().trim();
+    b.correct = (userAnswer === correctAnswer);
+    if (b.correct) correctCount++;
+  });
+
+  state.submitted = true;
+  const total = state.blanks.length;
+
+  // Show score
+  const scoreBar = document.getElementById('scoreBar');
+  const scoreText = document.getElementById('scoreText');
+  scoreBar.classList.add('visible');
+  const pct = correctCount / total;
+  if (pct === 1) {
+    scoreText.textContent = `🎉 完美！${correctCount}/${total} 全部正确`;
+    scoreText.className = 'score-text perfect';
+  } else if (pct >= 0.6) {
+    scoreText.textContent = `👍 不错！${correctCount}/${total} 正确`;
+    scoreText.className = 'score-text good';
+  } else {
+    scoreText.textContent = `📚 ${correctCount}/${total} 正确，继续加油`;
+    scoreText.className = 'score-text ok';
+  }
+
+  // Re-render — renderQuestions handles all correct/wrong CSS classes + translations
+  renderQuestions();
+  renderActions();
+
+  // Scroll to score
+  scoreBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/*              Restart                                   */
+/* ═══════════════════════════════════════════════════════ */
+function restartQuiz() {
+  // Show settings panel
+  document.getElementById('settingsPanel').classList.add('open');
+
+  // Reset display
+  document.getElementById('scoreBar').classList.remove('visible');
+  document.getElementById('wordBankSection').classList.remove('visible');
+  document.getElementById('questionsSection').classList.remove('visible');
+  document.getElementById('actions').classList.remove('visible');
+  document.getElementById('footer').classList.remove('visible');
+
+  // Clear
+  document.getElementById('wordBank').innerHTML = '';
+  document.getElementById('questionList').innerHTML = '';
+
+  // Reset state
+  state.submitted = false;
+  state.questions = [];
+  state.blanks = [];
+  state.wordBank = [];
+  state.dragInfo = null;
+  state.selectedUnit = null;
+  // Reset to mixed mode with default count
+  state.questionType = 'mixed';
+  state.questionCount = 10;
+
+  // Reset type buttons
+  document.querySelectorAll('#typeOptions .type-btn').forEach(b => b.classList.remove('active'));
+  const mixedBtn = document.querySelector('#typeOptions .type-btn[data-type="mixed"]');
+  if (mixedBtn) mixedBtn.classList.add('active');
+
+  // Reset unit selector
+  document.querySelectorAll('#unitOptions .type-btn').forEach(b => b.classList.remove('active'));
+  // Re-enable count buttons
+  const cm = document.getElementById('countMinus');
+  const cp = document.getElementById('countPlus');
+  cm.style.opacity = ''; cm.style.pointerEvents = '';
+  cp.style.opacity = ''; cp.style.pointerEvents = '';
+  document.getElementById('countLabel').textContent = '题目数量';
+  document.getElementById('countDisplay').textContent = '10';
+  document.getElementById('unitGroup').style.display = 'none';
+
+  // Scroll to top
+  document.getElementById('settingsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/*              Init                                      */
+/* ═══════════════════════════════════════════════════════ */
+// Prevent default touch behavior for dragging
+document.addEventListener('touchmove', function(e) {
+  if (state.dragInfo) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+// Hints are only shown after submission — see renderQuestions()
+</script>
+
+</body>
+</html>

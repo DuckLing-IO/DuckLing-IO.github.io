@@ -3,7 +3,9 @@
     "allow": [
       "Bash(git *)",
       "Bash(grep -v \"^$\")",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(pandoc \"resources/word_bank_cloze.docx\" -t markdown --track-changes=all)",
+      "Bash(python \"C:\\\\Users\\\\lenovo\\\\.claude\\\\plugins\\\\cache\\\\anthropic-agent-skills\\\\document-skills\\\\575462609294\\\\skills\\\\docx\\\\scripts\\\\office\\\\unpack.py\" \"resources/word_bank_cloze.docx\" \"resources/unpacked/\")"
     ]
   }
 }
