@@ -197,18 +197,33 @@ body::before {
 /* ═══════════════════════════════════════════════════════ */
 /*                    Word Bank                           */
 /* ═══════════════════════════════════════════════════════ */
-.word-bank-section { display: none; }
+.word-bank-section {
+  display: none;
+  position: sticky; top: 0; z-index: 100;
+  padding: 12px 0 14px;
+  margin: -12px -32px 0;
+  padding-left: 32px; padding-right: 32px;
+}
 .word-bank-section.visible { display: block; }
 
-.word-bank-label {
-  font-size: 0.78rem; font-weight: 500; color: var(--text-tertiary);
-  text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;
+.word-bank-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 10, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border);
+  pointer-events: none;
 }
+
 .word-bank {
+  position: relative; z-index: 1;
   display: flex; flex-wrap: wrap; gap: 12px;
-  padding: 20px 24px; border-radius: var(--radius-sm);
-  background: var(--surface); border: 1px solid var(--border);
-  min-height: 60px; align-items: center;
+  padding: 16px 20px; border-radius: var(--radius-xs);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  min-height: 56px; align-items: center;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 .word-bank.highlight {
@@ -380,7 +395,8 @@ body::before {
   .q-sentence { font-size: 0.98rem; line-height: 1.7; }
   .question-card { padding: 18px 16px; }
   .blank-slot { min-width: 60px; height: 28px; }
-  .word-bank { padding: 14px 16px; gap: 8px; }
+  .word-bank-section { margin: -12px -16px 0; padding-left: 16px; padding-right: 16px; }
+  .word-bank { padding: 12px 12px; gap: 8px; }
   .chip { padding: 7px 14px; font-size: 0.85rem; }
   .type-options { gap: 6px; }
   .type-btn { padding: 8px 16px; font-size: 0.82rem; }
@@ -446,7 +462,6 @@ body::before {
 
   <!-- Word Bank -->
   <div class="word-bank-section anim-2" id="wordBankSection">
-    <div class="word-bank-label">📦 候选词库 · 拖拽至空中</div>
     <div class="word-bank" id="wordBank"></div>
   </div>
 
